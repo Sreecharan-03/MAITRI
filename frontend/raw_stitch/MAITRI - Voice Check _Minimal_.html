@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MAITRI // Voice Check</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+    }
+    @keyframes soundwave {
+      0%, 100% { height: 6px; }
+      50% { height: 26px; }
+    }
+    .wave-bar-1 { animation: soundwave 1.2s ease-in-out infinite 0.1s; }
+    .wave-bar-2 { animation: soundwave 1.1s ease-in-out infinite 0.3s; }
+    .wave-bar-3 { animation: soundwave 1.3s ease-in-out infinite 0.2s; }
+    .wave-bar-4 { animation: soundwave 1.0s ease-in-out infinite 0.4s; }
+    .wave-bar-5 { animation: soundwave 1.2s ease-in-out infinite 0.15s; }
+  </style>
+</head>
+<body class="bg-[#0F172A] text-slate-100 min-h-screen relative flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500 selection:text-slate-950">
+<!-- Background Image with High Resolution Earth Limb and Deep Space Glow -->
+<div class="fixed inset-0 pointer-events-none z-0">
+<img alt="Deep space Earth orbital curvature" class="w-full h-full object-cover opacity-60 mix-blend-screen" src="https://lh3.googleusercontent.com/aida/AEtjO1VEzzGsn_937hAsoqW81liPmFMAlNCCVzBaMwZ863hVoffJ3LYozzwAfheYWPnyHAW7PfUVY1IeXpzsrTsG2aRwNJ4d6BQ1_ZHGyGbq4-obtMB7k5CMFI5KnJNiZzVC_PXa6OfIzuPNeqWvkOdzJD61Yoff3FsbSX2aviLTB0PCi1BWqFP-w4B1bWReWkL2--m2sfjABiwqW3nffepWIhUaCR9uWNtylulYYb_n2GDq4mUdETyUuHy2DqHk"/>
+<div class="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 via-[#0F172A]/70 to-[#0F172A]"></div>
+</div>
+<!-- Minimal Top Header -->
+<header class="relative z-20 w-full px-6 py-5">
+<div class="max-w-6xl mx-auto flex items-center justify-between">
+<!-- Left: Simple rocket icon + MAITRI -->
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+</div>
+<span class="font-bold text-lg tracking-wider text-white">MAITRI</span>
+</div>
+<!-- Top Center: Clean indicator pill -->
+<div class="hidden sm:flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+<span class="text-xs font-medium text-slate-300">Step 2 of 4: Voice Check</span>
+</div>
+<!-- Right: Clean pill badge -->
+<div class="flex items-center">
+<div class="px-3.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs font-medium text-slate-300 shadow-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px] text-cyan-400">account_circle</span>
+<span>Astronaut Check-In</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Centered Content -->
+<main class="relative z-10 w-full px-4 py-6 my-auto flex items-center justify-center">
+<div class="w-full max-w-xl mx-auto bg-slate-900/60 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/50 flex flex-col">
+<!-- Headline & Subtitle -->
+<div class="text-center mb-6">
+<h1 class="text-white text-[28px] font-bold tracking-tight mb-2">Speak Out Loud</h1>
+<p class="text-slate-400 text-[15px] max-w-md mx-auto leading-relaxed">
+          Read the prompt below or speak freely for 10–12 seconds so the model can evaluate your vocal tone.
+        </p>
+</div>
+<!-- Clean Reading Prompt Box -->
+<div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl p-5 mb-6 text-center">
+<p class="text-slate-200 text-sm leading-relaxed italic transition-opacity duration-200" id="prompt-text">
+          “Cabin pressure in the station is holding steady today. Completed my daily workout cycle, feeling focused and ready for the shift ahead.”
+        </p>
+<div class="mt-3.5 flex justify-center">
+<button class="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition flex items-center gap-1.5 cursor-pointer hover:underline" id="refresh-prompt-btn" type="button">
+<span>✨ Get a different prompt</span>
+</button>
+</div>
+</div>
+<!-- Minimalist Audio Recorder (The Centerpiece) -->
+<div class="flex flex-col items-center justify-center my-2">
+<button aria-label="Toggle voice recording" class="w-20 h-20 rounded-full bg-cyan-500/20 border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_25px_rgba(6,182,212,0.35)] hover:scale-105 active:scale-95 transition-all cursor-pointer group" id="mic-btn" type="button">
+<svg class="w-8 h-8 text-white group-hover:text-cyan-200 transition-colors" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24">
+<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+<path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+<line x1="12" x2="12" y1="19" y2="22"></line>
+</svg>
+</button>
+<!-- Timer / Status Indicator -->
+<span class="text-slate-300 font-medium text-sm mt-3" id="recording-status">Click to start speaking</span>
+<!-- Minimal 5-bar animated audio wave -->
+<div class="flex items-center gap-1.5 h-7 mt-3" id="audio-wave-bars">
+<span class="w-1 bg-cyan-400 rounded-full wave-bar-1 opacity-80"></span>
+<span class="w-1 bg-emerald-400 rounded-full wave-bar-2 opacity-90"></span>
+<span class="w-1 bg-cyan-300 rounded-full wave-bar-3"></span>
+<span class="w-1 bg-emerald-400 rounded-full wave-bar-4 opacity-90"></span>
+<span class="w-1 bg-cyan-400 rounded-full wave-bar-5 opacity-80"></span>
+</div>
+</div>
+<!-- Clear, Simple Result Badges -->
+<div class="flex flex-wrap items-center justify-center gap-3 mt-5">
+<div class="bg-slate-800/80 border border-slate-700/60 text-slate-200 text-xs px-3.5 py-1.5 rounded-full font-medium flex items-center gap-1.5 shadow-sm">
+<span>🎙️</span>
+<span>Vocal Tone: <span class="text-white font-semibold">Calm &amp; Steady</span></span>
+</div>
+<div class="bg-slate-800/80 border border-slate-700/60 text-emerald-300 text-xs px-3.5 py-1.5 rounded-full font-medium flex items-center gap-1.5 shadow-sm">
+<span>⚡</span>
+<span>Energy Level: <span class="text-emerald-200 font-semibold">Normal</span></span>
+</div>
+</div>
+<!-- Bottom Navigation Buttons -->
+<div class="flex items-center justify-between gap-4 mt-8 pt-4 border-t border-slate-800/60">
+<a class="rounded-xl px-5 py-2.5 border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm font-medium transition flex items-center gap-1" href="#">
+<span>← Back</span>
+</a>
+<a class="rounded-xl px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-sm shadow-lg shadow-cyan-500/20 transition flex items-center gap-1.5" href="#">
+<span>Continue to Crew Log</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</main>
+<!-- Minimal Footer -->
+<footer class="relative z-20 w-full px-6 py-4">
+<div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+<span>MAITRI Astronaut Health System</span>
+<div class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400/80"></span>
+<span>Encrypted Telemetry Session</span>
+</div>
+</div>
+</footer>
+<script>
+    // Lightweight interactivity for prompt switching & recording button state
+    (function() {
+      const prompts = [
+        "“Cabin pressure in the station is holding steady today. Completed my daily workout cycle, feeling focused and ready for the shift ahead.”",
+        "“Equipment diagnostics for the observation module completed successfully. Rest periods were adequate and energy levels feel consistent.”",
+        "“All systems in the research bay are functioning normally. Completed water sampling and hydration logs on schedule.”"
+      ];
+      let pIndex = 0;
+      const promptEl = document.getElementById('prompt-text');
+      const refreshBtn = document.getElementById('refresh-prompt-btn');
+
+      if (refreshBtn && promptEl) {
+        refreshBtn.addEventListener('click', () => {
+          pIndex = (pIndex + 1) % prompts.length;
+          promptEl.style.opacity = '0.3';
+          setTimeout(() => {
+            promptEl.textContent = prompts[pIndex];
+            promptEl.style.opacity = '1';
+          }, 150);
+        });
+      }
+
+      const micBtn = document.getElementById('mic-btn');
+      const statusEl = document.getElementById('recording-status');
+      let recording = false;
+      let countdown = 12;
+      let timerId = null;
+
+      if (micBtn && statusEl) {
+        micBtn.addEventListener('click', () => {
+          recording = !recording;
+          if (recording) {
+            countdown = 12;
+            micBtn.classList.remove('bg-cyan-500/20', 'border-cyan-400');
+            micBtn.classList.add('bg-rose-500/20', 'border-rose-400', 'shadow-[0_0_25px_rgba(244,63,94,0.35)]');
+            statusEl.textContent = "Listening... 00:12";
+            statusEl.classList.add('text-cyan-300');
+            
+            timerId = setInterval(() => {
+              countdown--;
+              const pad = countdown < 10 ? '0' + countdown : countdown;
+              statusEl.textContent = "Listening... 00:" + pad;
+              if (countdown <= 0) {
+                clearInterval(timerId);
+                resetRecState();
+                statusEl.textContent = "Recording complete";
+              }
+            }, 1000);
+          } else {
+            clearInterval(timerId);
+            resetRecState();
+            statusEl.textContent = "Click to start speaking";
+          }
+        });
+      }
+
+      function resetRecState() {
+        recording = false;
+        micBtn.classList.remove('bg-rose-500/20', 'border-rose-400', 'shadow-[0_0_25px_rgba(244,63,94,0.35)]');
+        micBtn.classList.add('bg-cyan-500/20', 'border-cyan-400');
+        statusEl.classList.remove('text-cyan-300');
+      }
+    })();
+  </script>
+</body></html>

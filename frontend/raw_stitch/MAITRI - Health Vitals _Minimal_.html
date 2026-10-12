@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_standard" name="shell-type"/>
+<title>MAITRI // Physiological Vitals</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              cyan: "#06b6d4",
+              emerald: "#10b981",
+              teal: "#14b8a6",
+              blue: "#38bdf8"
+            }
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Space Grotesk", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #0B0F19;
+      overscroll-behavior: none;
+    }
+    /* Sleek range slider styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(51, 65, 85, 0.45);
+      border-radius: 9999px;
+      height: 6px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      background: #7dd3fc;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 font-sans antialiased relative flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500/20 selection:text-cyan-300">
+<!-- Background Space Environment & Earth Horizon Glow -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<!-- Starfield Horizon Backdrop Image -->
+<div class="absolute inset-0 bg-cover bg-bottom opacity-50 mix-blend-screen scale-105 transform translate-y-10" style="background-image: url('https://lh3.googleusercontent.com/aida/AEtjO1VEzzGsn_937hAsoqW81liPmFMAlNCCVzBaMwZ863hVoffJ3LYozzwAfheYWPnyHAW7PfUVY1IeXpzsrTsG2aRwNJ4d6BQ1_ZHGyGbq4-obtMB7k5CMFI5KnJNiZzVC_PXa6OfIzuPNeqWvkOdzJD61Yoff3FsbSX2aviLTB0PCi1BWqFP-w4B1bWReWkL2--m2sfjABiwqW3nffepWIhUaCR9uWNtylulYYb_n2GDq4mUdETyUuHy2DqHk');"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-[#0B0F19]/90 via-[#0B0F19]/70 to-[#0B0F19]/95"></div>
+<div class="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[850px] h-[350px] bg-cyan-500/10 rounded-full blur-3xl"></div>
+</div>
+<!-- Top Navigation Bar -->
+<header class="relative z-20 w-full border-b border-slate-800/60 bg-[#0B0F19]/75 backdrop-blur-md px-6 py-4">
+<div class="max-w-5xl mx-auto flex items-center justify-between">
+<!-- Left Brand -->
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.2)]">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+</div>
+<span class="font-display font-bold text-lg tracking-wider text-white">MAITRI</span>
+</div>
+<!-- Center Step Badge -->
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/50">
+<span class="text-xs font-medium tracking-wide text-slate-300">Step 4 of 4: Health Vitals</span>
+</div>
+<!-- Right Connected Sensor Status -->
+<div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span>Sensors Connected</span>
+</div>
+</div>
+</header>
+<!-- Main Content Container -->
+<main class="relative z-10 w-full flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-8 flex flex-col justify-center">
+<!-- Header / Title Section -->
+<div class="text-center mb-8">
+<h1 class="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">
+        Physiological Vitals
+      </h1>
+<p class="text-sm sm:text-base text-slate-400 max-w-md mx-auto leading-relaxed">
+        Review or adjust your wearable sensor data to calculate current physical stress levels.
+      </p>
+</div>
+<!-- 6 Clean, Modern Vitals Cards (Apple Health / Oura / Whoop Aesthetic) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+<!-- Card 1: Heart Rate -->
+<div class="rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 shadow-lg flex flex-col justify-between hover:border-slate-700/80 transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+<span class="text-base">🫀</span> Heart Rate
+            </span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20" id="badge-hr">
+              Normal
+            </span>
+</div>
+<div class="flex items-baseline gap-1.5 mb-4">
+<span class="text-3xl font-bold font-display text-white tracking-tight" id="val-hr">78</span>
+<span class="text-sm font-normal text-slate-400">BPM</span>
+</div>
+</div>
+<div>
+<input class="w-full accent-cyan-400 cursor-pointer" id="slider-hr" max="140" min="60" type="range" value="78"/>
+<div class="flex justify-between text-[11px] text-slate-500 mt-1.5">
+<span>60</span>
+<span class="text-slate-400">Rest Baseline: 72</span>
+<span>140</span>
+</div>
+</div>
+</div>
+<!-- Card 2: HRV (RMSSD) -->
+<div class="rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 shadow-lg flex flex-col justify-between hover:border-slate-700/80 transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+<span class="text-base">⚡</span> Heart Rate Variability (HRV)
+            </span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" id="badge-hrv">
+              Good Recovery
+            </span>
+</div>
+<div class="flex items-baseline gap-1.5 mb-4">
+<span class="text-3xl font-bold font-display text-white tracking-tight" id="val-hrv">38</span>
+<span class="text-sm font-normal text-slate-400">ms</span>
+</div>
+</div>
+<div>
+<input class="w-full accent-emerald-400 cursor-pointer" id="slider-hrv" max="100" min="10" type="range" value="38"/>
+<div class="flex justify-between text-[11px] text-slate-500 mt-1.5">
+<span>10</span>
+<span class="text-slate-400">Target &gt; 35</span>
+<span>100</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Skin Conductance (EDA) -->
+<div class="rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 shadow-lg flex flex-col justify-between hover:border-slate-700/80 transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+<span class="text-base">💧</span> Skin Conductance (EDA)
+            </span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" id="badge-eda">
+              Calm
+            </span>
+</div>
+<div class="flex items-baseline gap-1.5 mb-4">
+<span class="text-3xl font-bold font-display text-white tracking-tight" id="val-eda">3.2</span>
+<span class="text-sm font-normal text-slate-400">µS</span>
+</div>
+</div>
+<div>
+<input class="w-full accent-emerald-400 cursor-pointer" id="slider-eda" max="10.0" min="0.5" step="0.1" type="range" value="3.2"/>
+<div class="flex justify-between text-[11px] text-slate-500 mt-1.5">
+<span>0.5</span>
+<span class="text-slate-400">Resting Tonic</span>
+<span>10.0</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Sweat Response Spikes -->
+<div class="rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 shadow-lg flex flex-col justify-between hover:border-slate-700/80 transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+<span class="text-base">💧</span> Sweat Response Spikes
+            </span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-500/10 text-cyan-300 border border-cyan-500/20" id="badge-spikes">
+              Low Stress
+            </span>
+</div>
+<div class="flex items-baseline gap-1.5 mb-4">
+<span class="text-3xl font-bold font-display text-white tracking-tight" id="val-spikes">5</span>
+<span class="text-sm font-normal text-slate-400">spikes/min</span>
+</div>
+</div>
+<div>
+<input class="w-full accent-cyan-400 cursor-pointer" id="slider-spikes" max="15" min="0" type="range" value="5"/>
+<div class="flex justify-between text-[11px] text-slate-500 mt-1.5">
+<span>0</span>
+<span class="text-slate-400">Normal Range: 2–6</span>
+<span>15</span>
+</div>
+</div>
+</div>
+<!-- Card 5: Skin Temperature -->
+<div class="rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 shadow-lg flex flex-col justify-between hover:border-slate-700/80 transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+<span class="text-base">🌡️</span> Skin Temperature
+            </span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-500/10 text-teal-300 border border-teal-500/20" id="badge-temp">
+              Optimal
+            </span>
+</div>
+<div class="flex items-baseline gap-1.5 mb-4">
+<span class="text-3xl font-bold font-display text-white tracking-tight" id="val-temp">36.5</span>
+<span class="text-sm font-normal text-slate-400">°C</span>
+</div>
+</div>
+<div>
+<input class="w-full accent-teal-400 cursor-pointer" id="slider-temp" max="38.0" min="35.0" step="0.1" type="range" value="36.5"/>
+<div class="flex justify-between text-[11px] text-slate-500 mt-1.5">
+<span>35.0°</span>
+<span class="text-slate-400">Baseline: 36.5°</span>
+<span>38.0°</span>
+</div>
+</div>
+</div>
+<!-- Card 6: Breathing Rate -->
+<div class="rounded-2xl bg-slate-900/60 backdrop-blur-md border border-slate-800/80 p-5 shadow-lg flex flex-col justify-between hover:border-slate-700/80 transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1.5">
+<span class="text-base">🫁</span> Breathing Rate
+            </span>
+<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" id="badge-resp">
+              Relaxed
+            </span>
+</div>
+<div class="flex items-baseline gap-1.5 mb-4">
+<span class="text-3xl font-bold font-display text-white tracking-tight" id="val-resp">15</span>
+<span class="text-sm font-normal text-slate-400">breaths/min</span>
+</div>
+</div>
+<div>
+<input class="w-full accent-emerald-400 cursor-pointer" id="slider-resp" max="25" min="10" type="range" value="15"/>
+<div class="flex justify-between text-[11px] text-slate-500 mt-1.5">
+<span>10</span>
+<span class="text-slate-400">Resting Flow</span>
+<span>25</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Overall Health Status Pill / Banner -->
+<div class="w-full max-w-4xl mx-auto mb-8">
+<div class="rounded-xl bg-slate-900/50 backdrop-blur-md border border-emerald-500/20 px-5 py-3.5 flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.08)]" id="overall-status-card">
+<div class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+<span class="material-symbols-outlined text-[15px] font-bold">check</span>
+</div>
+<p class="text-xs sm:text-sm font-medium text-emerald-300/90 text-center">
+          Current Physical Status: <span class="text-white font-semibold">Rested &amp; Ready for Duty</span>
+</p>
+</div>
+</div>
+<!-- Bottom Navigation Controls -->
+<div class="w-full max-w-4xl mx-auto flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-700/80 bg-slate-900/40 hover:bg-slate-800 text-slate-300 hover:text-white text-sm font-medium transition-all duration-150" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+<span>Back to Daily Log</span>
+</a>
+<a class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-sm font-semibold shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:shadow-[0_0_28px_rgba(6,182,212,0.5)] transition-all duration-200" href="#">
+<span>See Final Wellbeing Report</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+</main>
+<!-- Clean, Calm Minimal Footer -->
+<footer class="relative z-20 w-full border-t border-slate-800/40 bg-[#0B0F19]/80 py-4 px-6 text-center">
+<p class="text-xs text-slate-500 font-normal tracking-wide">
+      MAITRI Astronaut Health System • Encrypted Telemetry Session
+    </p>
+</footer>
+<!-- Interactive slider logic to keep UI responsive & alive -->
+<script>
+    (function () {
+      const inputs = [
+        { id: 'hr', val: 'val-hr', badge: 'badge-hr', minGood: 60, maxGood: 90, goodLabel: 'Normal', highLabel: 'Elevated' },
+        { id: 'hrv', val: 'val-hrv', badge: 'badge-hrv', minGood: 35, maxGood: 120, goodLabel: 'Good Recovery', highLabel: 'Fatigued' },
+        { id: 'eda', val: 'val-eda', badge: 'badge-eda', minGood: 0.5, maxGood: 5.5, goodLabel: 'Calm', highLabel: 'Aroused' },
+        { id: 'spikes', val: 'val-spikes', badge: 'badge-spikes', minGood: 0, maxGood: 7, goodLabel: 'Low Stress', highLabel: 'Active Stress' },
+        { id: 'temp', val: 'val-temp', badge: 'badge-temp', minGood: 36.1, maxGood: 37.2, goodLabel: 'Optimal', highLabel: 'Warm' },
+        { id: 'resp', val: 'val-resp', badge: 'badge-resp', minGood: 12, maxGood: 18, goodLabel: 'Relaxed', highLabel: 'Rapid' }
+      ];
+
+      inputs.forEach(item => {
+        const slider = document.getElementById('slider-' + item.id);
+        const display = document.getElementById(item.val);
+        const badge = document.getElementById(item.badge);
+
+        if (!slider || !display) return;
+
+        slider.addEventListener('input', (e) => {
+          display.textContent = e.target.value;
+          const num = parseFloat(e.target.value);
+
+          if (badge) {
+            if (num >= item.minGood && num <= item.maxGood) {
+              badge.textContent = item.goodLabel;
+              badge.className = "px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20";
+            } else {
+              badge.textContent = item.highLabel;
+              badge.className = "px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20";
+            }
+          }
+        });
+      });
+    })();
+  </script>
+</body></html>

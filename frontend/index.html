@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=5.0" name="viewport">
+<title>MAITRI // Multimodal AI for Astronaut Emotional & Physical Wellbeing</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            void: "#02040A",
+            brand: {
+              cyan: "#06b6d4",
+              "cyan-glow": "#4cd7f6",
+            }
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Space Grotesk", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"],
+          }
+        }
+      }
+    };
+</script>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #02040A;
+        color: #F8FAFC;
+        overflow-x: hidden;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+</style>
+</head>
+<body class="bg-[#02040A] font-sans antialiased text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500/20 selection:text-cyan-300 relative overflow-x-hidden">
+<!-- ATMOSPHERE & BACKGROUND -->
+<div class="fixed inset-0 pointer-events-none z-0">
+  <div class="absolute inset-0 bg-cover bg-bottom bg-no-repeat opacity-100 scale-[1.02]" style="background-image: url('assets/space_wallpaper.jpg');"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-[#02040A]/80 via-transparent to-[#02040A]/40 opacity-50"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-[#02040A]/60 via-transparent to-transparent opacity-40"></div>
+  <div class="absolute top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-[900px] h-[320px] sm:h-[550px] bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.18)_0%,rgba(99,102,241,0.08)_50%,transparent_75%)] blur-2xl"></div>
+  <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent"></div>
+</div>
+
+<!-- TOP LEFT LOGO (NO NAVBAR) -->
+<div class="absolute top-5 sm:top-7 left-5 sm:left-8 lg:left-12 z-50">
+  <a class="flex items-center group cursor-pointer" href="index.html">
+    <img src="assets/maitri_logo.png" alt="MAITRI Logo" class="h-9 sm:h-12 md:h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-[0_0_18px_rgba(6,182,212,0.45)]">
+  </a>
+</div>
+
+<!-- MAIN CONTENT CONTAINER -->
+<main class="relative z-10 flex-1 flex flex-col items-center justify-between px-4 sm:px-8 lg:px-16 pt-20 sm:pt-24 pb-10 sm:pb-12 w-full max-w-[1720px] mx-auto">
+<!-- HERO SECTION -->
+<section class="text-center max-w-5xl mx-auto flex flex-col items-center my-auto py-4 sm:py-8">
+  <div class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-[10px] sm:text-xs font-mono tracking-wider sm:tracking-widest uppercase mb-4 sm:mb-6 backdrop-blur-md shadow-[0_0_16px_rgba(6,182,212,0.15)]">
+    <span class="text-cyan-400 font-semibold">✦</span>
+    <span>DEEP-SPACE MULTIMODAL INTELLIGENCE</span>
+  </div>
+
+  <h1 class="font-display font-bold text-3xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.15] sm:leading-[1.12] mb-4 sm:mb-6 px-2">
+    <span class="bg-gradient-to-b from-[#FFFFFF] via-[#E2E8F0] to-[#06B6D4] bg-clip-text text-transparent drop-shadow-sm">
+      Autonomous Emotion &amp; Stress Telemetry for Deep Space.
+    </span>
+  </h1>
+
+  <p class="text-[#94A3B8] text-sm sm:text-lg lg:text-xl leading-relaxed max-w-3xl mx-auto mb-6 sm:mb-8 font-normal px-2">
+    Next-generation multimodal affective computing designed for astronaut isolation. Unifies facial micro-tremors, vocal acoustics, personal logs, and wearable autonomic biometrics into an onboard clinical diagnosis.
+  </p>
+
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto px-4 sm:px-0">
+    <a href="face-scan.html" class="group relative inline-flex items-center justify-center gap-2.5 px-7 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 border border-white/20 text-white font-display font-semibold text-sm tracking-wide shadow-[0_0_28px_rgba(6,182,212,0.45)] hover:shadow-[0_0_40px_rgba(6,182,212,0.7)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300">
+      <span>Start Wellbeing Check</span>
+      <span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
+    </a>
+    <a href="summary.html" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-slate-700/80 hover:border-cyan-400/60 bg-slate-900/60 backdrop-blur-md text-slate-300 hover:text-white font-medium text-sm transition-all">
+      <span class="material-symbols-outlined text-[18px] text-cyan-400">dashboard</span>
+      <span>Executive Briefing</span>
+    </a>
+  </div>
+</section>
+
+<!-- 4-CARD MODULE ROW -->
+<section class="w-full mt-6 sm:mt-10">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
+  <!-- Card 1: Face Micro-Scan -->
+  <a href="face-scan.html" class="group relative backdrop-blur-xl bg-slate-900/50 border border-slate-700/60 rounded-2xl p-5 sm:p-6 transition-all duration-300 hover:border-cyan-400/80 hover:shadow-[0_0_24px_rgba(6,182,212,0.2)] hover:-translate-y-1 flex flex-col justify-between block">
+    <div>
+      <div class="flex items-center justify-between w-full mb-3 sm:mb-4">
+        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center p-2.5 shadow-[0_0_12px_rgba(6,182,212,0.2)] group-hover:shadow-[0_0_18px_rgba(6,182,212,0.4)] transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </div>
+        <span class="font-mono text-xs text-slate-500 group-hover:text-cyan-400/70 transition-colors">01</span>
+      </div>
+      <h2 class="font-display font-semibold text-white text-base tracking-wide mt-2 sm:mt-4 mb-2">
+        Facial Micro-Scan
+      </h2>
+      <p class="text-[#94A3B8] text-sm leading-relaxed">
+        10-second optical scan capturing micro-expressions and RAF-DB 7-class emotion dynamics.
+      </p>
+    </div>
+    <div class="mt-4 flex items-center gap-1.5 text-xs text-cyan-400 font-medium">
+      <span>Launch 10s Scan</span>
+      <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+    </div>
+  </a>
+
+  <!-- Card 2: Acoustic Prosody -->
+  <a href="voice-check.html" class="group relative backdrop-blur-xl bg-slate-900/50 border border-slate-700/60 rounded-2xl p-5 sm:p-6 transition-all duration-300 hover:border-cyan-400/80 hover:shadow-[0_0_24px_rgba(6,182,212,0.2)] hover:-translate-y-1 flex flex-col justify-between block">
+    <div>
+      <div class="flex items-center justify-between w-full mb-3 sm:mb-4">
+        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center p-2.5 shadow-[0_0_12px_rgba(6,182,212,0.2)] group-hover:shadow-[0_0_18px_rgba(6,182,212,0.4)] transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" x2="12" y1="19" y2="23"></line>
+            <line x1="8" x2="16" y1="23" y2="23"></line>
+          </svg>
+        </div>
+        <span class="font-mono text-xs text-slate-500 group-hover:text-cyan-400/70 transition-colors">02</span>
+      </div>
+      <h2 class="font-display font-semibold text-white text-base tracking-wide mt-2 sm:mt-4 mb-2">
+        Acoustic Prosody
+      </h2>
+      <p class="text-[#94A3B8] text-sm leading-relaxed">
+        Real-time vocal pitch stability and harmonic tension analysis via Wav2Vec2.
+      </p>
+    </div>
+    <div class="mt-4 flex items-center gap-1.5 text-xs text-cyan-400 font-medium">
+      <span>Open Voice Check</span>
+      <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+    </div>
+  </a>
+
+  <!-- Card 3: Crew Sentiment Log -->
+  <a href="daily-log.html" class="group relative backdrop-blur-xl bg-slate-900/50 border border-slate-700/60 rounded-2xl p-5 sm:p-6 transition-all duration-300 hover:border-cyan-400/80 hover:shadow-[0_0_24px_rgba(6,182,212,0.2)] hover:-translate-y-1 flex flex-col justify-between block">
+    <div>
+      <div class="flex items-center justify-between w-full mb-3 sm:mb-4">
+        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center p-2.5 shadow-[0_0_12px_rgba(6,182,212,0.2)] group-hover:shadow-[0_0_18px_rgba(6,182,212,0.4)] transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" x2="8" y1="13" y2="13"></line>
+            <line x1="16" x2="8" y1="17" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+        <span class="font-mono text-xs text-slate-500 group-hover:text-cyan-400/70 transition-colors">03</span>
+      </div>
+      <h2 class="font-display font-semibold text-white text-base tracking-wide mt-2 sm:mt-4 mb-2">
+        Crew Sentiment Log
+      </h2>
+      <p class="text-[#94A3B8] text-sm leading-relaxed">
+        Evaluates isolation reflection and GoEmotions psychological coping markers.
+      </p>
+    </div>
+    <div class="mt-4 flex items-center gap-1.5 text-xs text-cyan-400 font-medium">
+      <span>Open Daily Log</span>
+      <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+    </div>
+  </a>
+
+  <!-- Card 4: Wearable Biosensors -->
+  <a href="health-vitals.html" class="group relative backdrop-blur-xl bg-slate-900/50 border border-slate-700/60 rounded-2xl p-5 sm:p-6 transition-all duration-300 hover:border-cyan-400/80 hover:shadow-[0_0_24px_rgba(6,182,212,0.2)] hover:-translate-y-1 flex flex-col justify-between block">
+    <div>
+      <div class="flex items-center justify-between w-full mb-3 sm:mb-4">
+        <div class="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center p-2.5 shadow-[0_0_12px_rgba(6,182,212,0.2)] group-hover:shadow-[0_0_18px_rgba(6,182,212,0.4)] transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+          </svg>
+        </div>
+        <span class="font-mono text-xs text-slate-500 group-hover:text-cyan-400/70 transition-colors">04</span>
+      </div>
+      <h2 class="font-display font-semibold text-white text-base tracking-wide mt-2 sm:mt-4 mb-2">
+        Wearable Biosensors
+      </h2>
+      <p class="text-[#94A3B8] text-sm leading-relaxed">
+        Continuous tracking of heart rate, SpO2, and WESAD autonomic stress indicators.
+      </p>
+    </div>
+    <div class="mt-4 flex items-center gap-1.5 text-xs text-cyan-400 font-medium">
+      <span>Open Health Vitals</span>
+      <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+    </div>
+  </a>
+</div>
+</section>
+</main>
+
+<!-- MINIMAL FOOTER -->
+<footer class="relative z-10 w-full border-t border-slate-900/80 py-5 sm:py-6 bg-[#02040A]/60 backdrop-blur-sm">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center gap-2 text-center">
+  <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"></circle>
+    <path d="M3.6 9h16.8"></path>
+    <path d="M3.6 15h16.8"></path>
+    <path d="M12 3a15.3 15.3 0 0 1 4 18 15.3 15.3 0 0 1-8 0 15.3 15.3 0 0 1 4-18z"></path>
+  </svg>
+  <p class="text-[11px] sm:text-xs text-[#64748B] tracking-wider font-sans">
+    Department of Artificial Intelligence • Anurag University | Project MAITRI
+  </p>
+</div>
+</footer>
+
+<script src="js/maitri-bridge.js"></script>
+</body>
+</html>

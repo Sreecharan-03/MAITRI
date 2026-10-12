@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MAITRI // Executive Health Briefing</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-dark": "#0A0F1D",
+            "slate-glass": "rgba(15, 23, 42, 0.75)",
+            "primary-cyan": "#06b6d4",
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Space Grotesk", "sans-serif"],
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #0A0F1D;
+    }
+  </style>
+</head>
+<body class="bg-[#0A0F1D] text-slate-100 font-sans antialiased min-h-screen relative selection:bg-cyan-500 selection:text-slate-950 flex flex-col justify-between">
+<!-- Background Layer: Orbital Horizon Glow & Image -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-bottom opacity-35 mix-blend-screen scale-105" style="background-image: url('https://lh3.googleusercontent.com/aida/AEtjO1VEzzGsn_937hAsoqW81liPmFMAlNCCVzBaMwZ863hVoffJ3LYozzwAfheYWPnyHAW7PfUVY1IeXpzsrTsG2aRwNJ4d6BQ1_ZHGyGbq4-obtMB7k5CMFI5KnJNiZzVC_PXa6OfIzuPNeqWvkOdzJD61Yoff3FsbSX2aviLTB0PCi1BWqFP-w4B1bWReWkL2--m2sfjABiwqW3nffepWIhUaCR9uWNtylulYYb_n2GDq4mUdETyUuHy2DqHk');"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-[#0A0F1D]/80 via-[#0A0F1D]/65 to-[#0A0F1D]"></div>
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[320px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none"></div>
+</div>
+<!-- 1. Minimal Header -->
+<header class="relative z-20 w-full border-b border-slate-800/80 bg-[#0A0F1D]/80 backdrop-blur-xl">
+<div class="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
+<!-- Left: Simple rocket icon + MAITRI -->
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+</div>
+<span class="font-display font-bold text-xl tracking-wider text-white">MAITRI</span>
+</div>
+<!-- Center: Mission Assessment Summary -->
+<div class="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-800 text-slate-400 text-sm font-medium">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span>Mission Assessment Summary</span>
+</div>
+<!-- Right: User Avatar -->
+<div class="flex items-center gap-3">
+<div class="text-right hidden md:block">
+<div class="text-sm font-semibold text-white">Cdr. Sharma</div>
+<div class="text-xs text-slate-400">Orbital Station</div>
+</div>
+<div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 overflow-hidden shadow-inner">
+<span class="material-symbols-outlined text-[22px]">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="relative z-10 w-full px-6 py-10 max-w-4xl mx-auto flex-1 flex flex-col gap-10"><section class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-6 sm:p-8 shadow-xl backdrop-blur-md relative overflow-hidden transition hover:border-slate-600/60"><div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div><div class="absolute left-1/4 -bottom-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div><div class="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8 items-center relative z-10"><div class="md:col-span-4 flex flex-col items-center justify-center p-2"><div class="relative w-36 h-36 flex items-center justify-center"><svg class="w-full h-full transform -rotate-90" viewbox="0 0 120 120"><defs><lineargradient id="readinessGradient" x1="0%" x2="100%" y1="0%" y2="100%"><stop offset="0%" stop-color="#10b981"></stop><stop offset="100%" stop-color="#06b6d4"></stop></lineargradient><filter height="140%" id="glow" width="140%" x="-20%" y="-20%"><fegaussianblur result="blur" stddeviation="4"></fegaussianblur><fecomposite in="SourceGraphic" in2="blur" operator="over"></fecomposite></filter></defs><circle class="text-slate-800/80" cx="60" cy="60" fill="transparent" r="48" stroke="currentColor" stroke-width="9"></circle><circle cx="60" cy="60" fill="transparent" filter="url(#glow)" r="48" stroke="url(#readinessGradient)" stroke-dasharray="301.59" stroke-dashoffset="66.35" stroke-linecap="round" stroke-width="9"></circle></svg><div class="absolute inset-0 flex flex-col items-center justify-center text-center"><span class="text-3xl sm:text-4xl font-bold font-display tracking-tight text-white">78</span><span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">/ 100</span></div></div><div class="mt-3 text-center"><div class="text-xs font-semibold uppercase tracking-wider text-slate-300">Mission Readiness</div><div class="text-[11px] text-emerald-400 font-medium mt-0.5">Optimal Functioning</div></div></div><div class="md:col-span-8 flex flex-col items-start"><div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wide mb-3.5 shadow-[0_0_12px_rgba(16,185,129,0.15)]"><span>🌿</span><span>Rested with Mild Operational Strain</span></div><h1 class="text-white font-display text-2xl sm:text-[28px] font-bold leading-snug tracking-tight mb-2.5">High focus, but your body is carrying hidden fatigue.</h1><p class="text-slate-300 text-[15px] leading-relaxed">Your spoken tone and crew logs remain composed and optimistic, but wearable telemetry reveals elevated autonomic arousal. A brief recovery protocol is recommended.</p></div></div></section><section class="flex flex-col gap-4"><div class="flex items-center justify-between px-1"><div class="text-xs font-semibold uppercase tracking-wider text-slate-400">Cross-Modal Discordance Analytics</div><div class="text-xs font-medium text-cyan-400 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>Live Biometric Fusion</div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-5 backdrop-blur-md flex flex-col justify-between gap-4 shadow-lg hover:border-slate-600/70 transition"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-cyan-400 text-[20px]">tune</span><h3 class="text-white font-semibold text-sm tracking-wide">Cross-Modal Alignment (EDD Analysis)</h3></div><span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">v2.4 Core</span></div><div class="flex flex-col gap-3.5"><div class="flex flex-col gap-1.5"><div class="flex justify-between items-center text-xs"><span class="text-slate-300 font-medium flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Expressed Demeanor (Face + Voice + Log)</span><span class="text-emerald-400 font-semibold">86% Composed</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style="width: 86%"></div></div></div><div class="flex flex-col gap-1.5"><div class="flex justify-between items-center text-xs"><span class="text-slate-300 font-medium flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Internal Stress Load (Wearables)</span><span class="text-amber-400 font-semibold">68% Autonomic Strain</span></div><div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-rose-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]" style="width: 68%"></div></div></div></div><div class="pt-2 border-t border-slate-800/80 flex items-center gap-2 text-xs text-amber-300/95"><span class="material-symbols-outlined text-[16px] text-amber-400">warning</span><span>Divergence detected: Active stress suppression flagged</span></div></div><div class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-5 backdrop-blur-md flex flex-col justify-between gap-4 shadow-lg hover:border-slate-600/70 transition"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-cyan-400 text-[20px]">vital_signs</span><h3 class="text-white font-semibold text-sm tracking-wide">Autonomic Stress Telemetry</h3></div><span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Stable Variance</span></div><div class="grid grid-cols-2 gap-3.5"><div class="rounded-xl bg-slate-950/40 border border-slate-800/90 p-3.5 flex flex-col justify-between"><div class="flex items-center justify-between text-xs text-slate-400 mb-1"><span>Heart Rate</span><span class="text-amber-400 font-medium text-[11px]">+12 bpm vs base</span></div><div class="text-2xl font-bold font-display text-white tracking-tight">82 <span class="text-xs font-normal text-slate-400 font-sans">BPM</span></div><div class="w-full h-8 mt-2"><svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 32"><path d="M0,24 Q15,22 25,18 T50,8 T75,16 T100,10" fill="none" stroke="#f59e0b" stroke-linecap="round" stroke-width="2.2"></path><path d="M0,24 Q15,22 25,18 T50,8 T75,16 T100,10 L100,32 L0,32 Z" fill="url(#amberGlow)" opacity="0.15"></path></svg></div></div><div class="rounded-xl bg-slate-950/40 border border-slate-800/90 p-3.5 flex flex-col justify-between"><div class="flex items-center justify-between text-xs text-slate-400 mb-1"><span>Skin Conductance</span><span class="text-cyan-400 font-medium text-[11px]">Micro-arousal</span></div><div class="text-2xl font-bold font-display text-white tracking-tight">3.8 <span class="text-xs font-normal text-slate-400 font-sans">µS</span></div><div class="w-full h-8 mt-2"><svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 32"><path d="M0,20 Q20,16 40,22 T70,9 T100,14" fill="none" stroke="#06b6d4" stroke-linecap="round" stroke-width="2.2"></path><path d="M0,20 Q20,16 40,22 T70,9 T100,14 L100,32 L0,32 Z" fill="url(#cyanGlow)" opacity="0.15"></path></svg></div></div></div><div class="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800/80"><span>Baseline comparison: Nominal shift delta</span><span class="text-slate-300 font-mono">Last sync: 2m ago</span></div></div></div></section><section class="flex flex-col gap-4"><div class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">Telemetry Modality Observations</div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div class="rounded-xl bg-slate-900/60 border border-slate-700/60 p-4 backdrop-blur-sm flex flex-col gap-1.5 hover:border-slate-500/60 transition shadow-sm"><div class="flex items-center gap-2 text-slate-400 text-xs font-medium"><span class="text-base">📷</span><span>Face Expressive</span></div><div class="text-white font-semibold text-sm">Neutral &amp; Focused</div><div class="text-[11px] text-emerald-400">89% confidence</div></div><div class="rounded-xl bg-slate-900/60 border border-slate-700/60 p-4 backdrop-blur-sm flex flex-col gap-1.5 hover:border-slate-500/60 transition shadow-sm"><div class="flex items-center gap-2 text-slate-400 text-xs font-medium"><span class="text-base">🎙️</span><span>Voice Acoustics</span></div><div class="text-white font-semibold text-sm">Steady Pitch</div><div class="text-[11px] text-cyan-400">114 Hz fundamental</div></div><div class="rounded-xl bg-slate-900/60 border border-slate-700/60 p-4 backdrop-blur-sm flex flex-col gap-1.5 hover:border-slate-500/60 transition shadow-sm"><div class="flex items-center gap-2 text-slate-400 text-xs font-medium"><span class="text-base">📝</span><span>Journal Sentiment</span></div><div class="text-white font-semibold text-sm">Optimistic / Task-Oriented</div><div class="text-[11px] text-slate-400">Family reflection noted</div></div><div class="rounded-xl bg-slate-900/60 border border-slate-700/60 p-4 backdrop-blur-sm flex flex-col gap-1.5 hover:border-amber-500/40 transition shadow-sm"><div class="flex items-center gap-2 text-amber-400 text-xs font-medium"><span class="text-base">🫀</span><span>Vitals Stream</span></div><div class="text-amber-300 font-semibold text-sm">Elevated Autonomic Load</div><div class="text-[11px] text-amber-400/90">Sympathetic dominance</div></div></div></section><section class="flex flex-col gap-4"><div class="flex items-center justify-between px-1"><h2 class="text-white font-display text-xl font-semibold tracking-tight">Recommended Recovery Actions</h2><span class="text-xs text-slate-400">Flight Surgeon Protocol #04</span></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-5 backdrop-blur-md flex flex-col gap-3.5 transition-all hover:bg-slate-900/80 hover:border-amber-500/40 shadow-sm"><div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.15)]"><span class="material-symbols-outlined text-[22px]">lightbulb</span></div><div><h3 class="text-white font-semibold text-base mb-1.5">Dim Cabin Lighting</h3><p class="text-slate-300 text-sm leading-relaxed">Warm amber 450nm mode 30 min before rest cycle to trigger physiological melatonin release.</p></div></div><div class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-5 backdrop-blur-md flex flex-col gap-3.5 transition-all hover:bg-slate-900/80 hover:border-cyan-500/40 shadow-sm"><div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.15)]"><span class="material-symbols-outlined text-[22px]">self_improvement</span></div><div><h3 class="text-white font-semibold text-base mb-1.5">10-Minute Vagal Reset</h3><p class="text-slate-300 text-sm leading-relaxed">Audio-guided pacing break in the habit pod to lower sympathetic tone and re-center vagal nerve activity.</p></div></div><div class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-5 backdrop-blur-md flex flex-col gap-3.5 transition-all hover:bg-slate-900/80 hover:border-emerald-500/40 shadow-sm"><div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.15)]"><span class="material-symbols-outlined text-[22px]">contact_phone</span></div><div><h3 class="text-white font-semibold text-base mb-1.5">Family Audio Link</h3><p class="text-slate-300 text-sm leading-relaxed">Scheduled audio sync during the next ground pass. Personal ground connection supports crew morale.</p></div></div></div></section><section class="pt-4 pb-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80"><button class="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-200 text-sm font-medium transition flex items-center justify-center gap-2" id="reset-cycle-btn"><span class="material-symbols-outlined text-[18px]">replay</span><span>Start New Assessment</span></button><button class="w-full sm:w-auto px-6 py-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-semibold text-sm shadow-lg shadow-cyan-500/20 transition flex items-center justify-center gap-2" id="export-pdf-btn"><span>Download Mission Report (PDF)</span><span class="material-symbols-outlined text-[18px]">download</span></button></section></main>
+<!-- Clean Minimal Footer -->
+<footer class="relative z-20 w-full border-t border-slate-800/60 bg-[#0A0F1D]/80 backdrop-blur-md py-5">
+<div class="max-w-4xl mx-auto px-6 text-center text-xs text-slate-400">
+      MAITRI Astronaut Health System • Encrypted Telemetry Session
+    </div>
+</footer>
+<script>
+    const exportBtn = document.getElementById('export-pdf-btn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => {
+        const originalContent = exportBtn.innerHTML;
+        exportBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Preparing Report...</span>';
+        setTimeout(() => {
+          exportBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>Report Ready</span>';
+          setTimeout(() => {
+            exportBtn.innerHTML = originalContent;
+          }, 2500);
+        }, 1200);
+      });
+    }
+
+    const resetBtn = document.getElementById('reset-cycle-btn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        const original = resetBtn.innerHTML;
+        resetBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span><span>Starting...</span>';
+        setTimeout(() => {
+          resetBtn.innerHTML = original;
+        }, 1200);
+      });
+    }
+  </script>
+</body></html>
