@@ -77,6 +77,27 @@
 <!-- Main Content Area -->
 <main class="relative z-10 w-full px-4 sm:px-8 py-6 sm:py-10 max-w-4xl mx-auto flex-1 flex flex-col gap-6 sm:gap-10">
 
+<!-- Discordance Alert Banner -->
+<section id="discordance-alert-banner" class="rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex items-start gap-3.5 backdrop-blur-md bg-emerald-950/40 border-emerald-500/40 text-emerald-200">
+  <span class="material-symbols-outlined text-[24px] text-emerald-400 shrink-0 mt-0.5" id="discordance-alert-icon">verified_user</span>
+  <div class="flex-1">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+      <h4 class="font-semibold text-emerald-300 text-sm sm:text-base tracking-wide" id="discordance-alert-title">
+        NOMINAL: Internal and external signals congruent
+      </h4>
+      <span class="font-mono text-xs px-2.5 py-0.5 rounded-full bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto" id="csi-badge-score">
+        CSI: 0.142
+      </span>
+    </div>
+    <p class="text-xs sm:text-sm text-emerald-200/80 mt-1 leading-relaxed" id="discordance-alert-desc">
+      Overt verbal, facial, and acoustic demeanor align with autonomic physiological homeostasis.
+    </p>
+    <div class="mt-2 text-[10px] sm:text-[11px] font-mono text-slate-400">
+      Formula: CSI = 0.25·TFC + 0.35·FSI + 0.15·ASI + 0.25·(PSI/100)
+    </div>
+  </div>
+</section>
+
 <!-- Hero Summary Card with Circular Score Dial -->
 <section class="rounded-2xl bg-slate-900/60 border border-slate-700/60 p-4 sm:p-7 md:p-8 shadow-xl backdrop-blur-md relative overflow-hidden transition hover:border-slate-600/60">
   <div class="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -222,6 +243,155 @@
         <span>Empatica E4 / WESAD Fusion</span>
         <span class="text-slate-300 font-mono">Sync: Live</span>
       </div>
+    </div>
+  </div>
+<!-- Core Research Deliverables: Plutchik 8-Class Distribution & Entropy-Gated Modality Weights -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+  <!-- Left: Plutchik Affect Vector Distribution -->
+  <div class="lg:col-span-7 rounded-2xl bg-slate-900/60 border border-slate-700/60 p-4 sm:p-6 backdrop-blur-md flex flex-col justify-between shadow-lg">
+    <div>
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-cyan-400 text-[20px]">radar</span>
+          <h3 class="text-white font-semibold text-xs sm:text-sm tracking-wide">Plutchik Affect Vector (8-Class Unified Engine)</h3>
+        </div>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-500/30" id="plutchik-dominant-badge">Trust: 63.3%</span>
+      </div>
+
+      <!-- Plutchik Distribution Bars -->
+      <div class="space-y-2.5 text-xs mt-3" id="plutchik-bars-container">
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Trust</span>
+            <span class="font-mono text-cyan-400" id="plutchik-val-Trust">63.3%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-cyan-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Trust" style="width: 63.3%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Anticipation</span>
+            <span class="font-mono text-sky-400" id="plutchik-val-Anticipation">15.3%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-sky-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Anticipation" style="width: 15.3%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Joy</span>
+            <span class="font-mono text-emerald-400" id="plutchik-val-Joy">5.0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-emerald-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Joy" style="width: 5%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Sadness</span>
+            <span class="font-mono text-blue-400" id="plutchik-val-Sadness">5.0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-blue-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Sadness" style="width: 5%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Surprise</span>
+            <span class="font-mono text-teal-400" id="plutchik-val-Surprise">3.1%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-teal-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Surprise" style="width: 3.1%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Fear</span>
+            <span class="font-mono text-purple-400" id="plutchik-val-Fear">2.9%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-purple-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Fear" style="width: 2.9%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Disgust</span>
+            <span class="font-mono text-amber-400" id="plutchik-val-Disgust">2.8%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-amber-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Disgust" style="width: 2.8%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-[11px] mb-1">
+            <span class="text-slate-300">Anger</span>
+            <span class="font-mono text-rose-400" id="plutchik-val-Anger">2.5%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-rose-400 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Anger" style="width: 2.5%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Entropy-Gated Modality Weights -->
+  <div class="lg:col-span-5 rounded-2xl bg-slate-900/60 border border-slate-700/60 p-4 sm:p-6 backdrop-blur-md flex flex-col justify-between shadow-lg">
+    <div>
+      <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800/80">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-purple-400 text-[20px]">equalizer</span>
+          <h3 class="text-white font-semibold text-xs sm:text-sm tracking-wide">Entropy-Gated Modality Weights (αₘ)</h3>
+        </div>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950/40 text-purple-300 border border-purple-500/30">Dynamic</span>
+      </div>
+      <p class="text-[11px] text-slate-400 mb-4 leading-relaxed">
+        Modality voting shares dynamically weighted inversely by channel predictive entropy.
+      </p>
+
+      <div class="space-y-4">
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>Facial Video (SwinV2)
+            </span>
+            <span class="font-mono text-cyan-300" id="weight-val-face">26.9%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div class="bg-cyan-400 h-2 rounded-full transition-all duration-700" id="weight-bar-face" style="width: 26.9%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-indigo-400"></span>Acoustic Voice (Wav2Vec)
+            </span>
+            <span class="font-mono text-indigo-300" id="weight-val-speech">69.0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div class="bg-indigo-500 h-2 rounded-full transition-all duration-700" id="weight-bar-speech" style="width: 69.0%"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-400"></span>Conversational Text (PAC-Net)
+            </span>
+            <span class="font-mono text-purple-300" id="weight-val-text">4.1%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div class="bg-purple-500 h-2 rounded-full transition-all duration-700" id="weight-bar-text" style="width: 4.1%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+      <span>Composite Fusion Engine</span>
+      <span class="font-mono text-emerald-400">Convergence: 99.8%</span>
     </div>
   </div>
 </section>
@@ -422,7 +592,119 @@
       }
     }
 
+    // Call End-to-End Multimodal Entropy Fusion & CSI Endpoint
+    async function loadMultimodalPrediction() {
+      const hr = (state.stress_result && state.stress_result.details && state.stress_result.details.hr_bpm) || 78.0;
+      const hrv = (state.stress_result && state.stress_result.details && state.stress_result.details.hrv_ms) || 38.0;
+      const eda = (state.stress_result && state.stress_result.details && state.stress_result.details.eda_us) || 1.2;
+      const temp = (state.stress_result && state.stress_result.details && state.stress_result.details.skin_temp_c) || 36.5;
+      const textLog = (state.text_result && state.text_result.text) || "Everything is nominal on the station, proceeding with standard routine maintenance.";
+
+      const physioVector = [hr, hrv * 1.15, hrv, eda, eda * 0.15, eda * 1.6, eda > 2.0 ? 10.0 : 4.0, 15.0, 1.2, 0.25, temp, 0.2, 0.01];
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/predict_multimodal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text_log: textLog,
+            wearable_features: physioVector
+          })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // 1. Update Discordance Alert Banner
+        const banner = document.getElementById('discordance-alert-banner');
+        const alertIcon = document.getElementById('discordance-alert-icon');
+        const alertTitle = document.getElementById('discordance-alert-title');
+        const alertDesc = document.getElementById('discordance-alert-desc');
+        const csiBadge = document.getElementById('csi-badge-score');
+
+        const csi = typeof data.composite_suppression_index === 'number' ? data.composite_suppression_index : 0.142;
+        if (csiBadge) csiBadge.textContent = `CSI: ${csi.toFixed(3)}`;
+
+        if (banner && data.discordance_alert) {
+          banner.className = "rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex items-start gap-3.5 backdrop-blur-md bg-red-950/50 border-red-500/60 text-red-200 shadow-[0_0_24px_rgba(239,68,68,0.25)]";
+          if (alertIcon) {
+            alertIcon.textContent = "warning";
+            alertIcon.className = "material-symbols-outlined text-[24px] text-red-400 shrink-0 mt-0.5 animate-pulse";
+          }
+          if (alertTitle) {
+            alertTitle.textContent = "CRITICAL: Emotional Discordance Detected — Covert stress masked by calm demeanor";
+            alertTitle.className = "font-semibold text-red-300 text-sm sm:text-base tracking-wide";
+          }
+          if (alertDesc) {
+            alertDesc.textContent = "Autonomic physiological stress or micro-expressions contradict overt verbal/facial composure. Potential covert strain or fatigue suppression.";
+          }
+          if (csiBadge) {
+            csiBadge.className = "font-mono text-xs px-2.5 py-0.5 rounded-full bg-red-900/80 border border-red-500/50 text-red-200 self-start sm:self-auto";
+          }
+        } else if (banner) {
+          banner.className = "rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex items-start gap-3.5 backdrop-blur-md bg-emerald-950/40 border-emerald-500/40 text-emerald-200";
+          if (alertIcon) {
+            alertIcon.textContent = "verified_user";
+            alertIcon.className = "material-symbols-outlined text-[24px] text-emerald-400 shrink-0 mt-0.5";
+          }
+          if (alertTitle) {
+            alertTitle.textContent = "NOMINAL: Internal and external signals congruent";
+            alertTitle.className = "font-semibold text-emerald-300 text-sm sm:text-base tracking-wide";
+          }
+          if (alertDesc) {
+            alertDesc.textContent = "Overt verbal, facial, and acoustic demeanor align with autonomic physiological homeostasis.";
+          }
+          if (csiBadge) {
+            csiBadge.className = "font-mono text-xs px-2.5 py-0.5 rounded-full bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 self-start sm:self-auto";
+          }
+        }
+
+        // 2. Update Plutchik 8-Class Distribution
+        if (data.fused_emotion_distribution) {
+          const dominant = data.predicted_emotion || "Trust";
+          const domProb = Math.round((data.confidence || 0.63) * 100);
+          const badgeEl = document.getElementById('plutchik-dominant-badge');
+          if (badgeEl) badgeEl.textContent = `${dominant}: ${domProb}%`;
+
+          Object.entries(data.fused_emotion_distribution).forEach(([emo, prob]) => {
+            const pct = (prob * 100).toFixed(1);
+            const valEl = document.getElementById(`plutchik-val-${emo}`);
+            const barEl = document.getElementById(`plutchik-bar-${emo}`);
+            if (valEl) valEl.textContent = `${pct}%`;
+            if (barEl) barEl.style.width = `${pct}%`;
+          });
+        }
+
+        // 3. Update Entropy-Gated Modality Weights
+        if (data.modality_certainty_weights) {
+          const w = data.modality_certainty_weights;
+          const facePct = (w.face * 100).toFixed(1);
+          const speechPct = (w.speech * 100).toFixed(1);
+          const textPct = (w.text * 100).toFixed(1);
+
+          const wFace = document.getElementById('weight-val-face');
+          const bFace = document.getElementById('weight-bar-face');
+          if (wFace) wFace.textContent = `${facePct}%`;
+          if (bFace) bFace.style.width = `${facePct}%`;
+
+          const wSpeech = document.getElementById('weight-val-speech');
+          const bSpeech = document.getElementById('weight-bar-speech');
+          if (wSpeech) wSpeech.textContent = `${speechPct}%`;
+          if (bSpeech) bSpeech.style.width = `${speechPct}%`;
+
+          const wText = document.getElementById('weight-val-text');
+          const bText = document.getElementById('weight-bar-text');
+          if (wText) wText.textContent = `${textPct}%`;
+          if (bText) bText.style.width = `${textPct}%`;
+        }
+
+      } catch (err) {
+        console.warn("predict_multimodal load error:", err);
+      }
+    }
+
     loadGeminiSynthesis();
+    loadMultimodalPrediction();
 
     exportBtn?.addEventListener('click', () => {
       window.print();

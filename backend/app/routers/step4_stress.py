@@ -12,11 +12,40 @@ async def analyze_stress(payload: WearableDataRequest):
         temp = payload.get_temp()
         accel = payload.get_accel()
 
+        rmssd = payload.hrv_rmssd or payload.hrvRmssd
+        eda = payload.mean_eda or payload.meanEda
+
+        features_13d = None
+        if rmssd is not None or eda is not None:
+            hr_val = float(hr if hr is not None else 78.0)
+            rmssd_val = float(rmssd if rmssd is not None else 38.0)
+            eda_val = float(eda if eda is not None else 1.2)
+            temp_val = float(temp if temp is not None else 36.5)
+            scr_val = float(payload.scr_count or payload.scrCount or (4.0 if eda_val < 1.0 else 9.0))
+            resp_val = float(payload.respiration_rate or payload.respirationRate or 15.0)
+
+            features_13d = [
+                hr_val,
+                rmssd_val * 1.15,
+                rmssd_val,
+                eda_val,
+                eda_val * 0.15,
+                eda_val * 1.6,
+                scr_val,
+                resp_val,
+                1.2,
+                0.25,
+                temp_val,
+                0.2,
+                0.01
+            ]
+
         result = await predict_wearable_stress(
             hr=hr,
             spo2=spo2,
             temp=temp,
-            accel=accel
+            accel=accel,
+            features_13d=features_13d
         )
         
         # Include custom details if HRV/EDA provided

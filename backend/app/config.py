@@ -18,10 +18,10 @@ class Settings:
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
     # Model paths
-    FACE_MODEL_CHECKPOINT: Path = BASE_DIR / "models" / "face_detection" / "rafdb_epoch21_acc0.897_bacc0.8275.pth"
+    FACE_MODEL_CHECKPOINT: Path = BASE_DIR / "models" / "Face" / "swinv2_export" / "swinv2_nadnet_best.pth"
     
-    # Fallback to workspace root face_detection if needed
+    # Fallback to legacy path if needed
     if not FACE_MODEL_CHECKPOINT.exists():
-        FACE_MODEL_CHECKPOINT = BASE_DIR.parent / "face_detection" / "rafdb_epoch21_acc0.897_bacc0.8275.pth"
+        FACE_MODEL_CHECKPOINT = BASE_DIR / "models" / "face_detection" / "rafdb_epoch21_acc0.897_bacc0.8275.pth"
 
 settings = Settings()

@@ -3,6 +3,8 @@ import sys
 import tempfile
 import cv2
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from PIL import Image
 from torchvision import transforms
@@ -10,21 +12,88 @@ from typing import Dict, Any, List, Optional, Tuple
 
 from app.config import settings
 
-# Ensure models directory is on sys.path
-models_dir = str(settings.BASE_DIR / "models")
-if models_dir not in sys.path:
-    sys.path.insert(0, models_dir)
-
-try:
-    from face_detection.networks.dan import DAN
-except ImportError:
-    try:
-        from models.face_detection.networks.dan import DAN
-    except ImportError:
-        from networks.dan import DAN
-
 # Emotion labels for RAF-DB (7 classes)
 EMOTIONS = ['Surprise', 'Fear', 'Disgust', 'Happiness', 'Sadness', 'Anger', 'Neutral']
+
+# ---------------------------------------------------------------------------
+# SwinV2 NAD-Net Architecture (Non-verbal Affective Decoupling Network)
+# ---------------------------------------------------------------------------
+class BidirectionalCrossAttention(nn.Module):
+    def __init__(self, embed_dim=768, num_heads=8, dropout=0.1):
+        super(BidirectionalCrossAttention, self).__init__()
+        self.cross_attn_up = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, dropout=dropout, batch_first=True)
+        self.cross_attn_low = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads, dropout=dropout, batch_first=True)
+        self.norm_up = nn.LayerNorm(embed_dim)
+        self.norm_low = nn.LayerNorm(embed_dim)
+        self.fusion_proj = nn.Sequential(
+            nn.Linear(embed_dim * 2, embed_dim),
+            nn.LayerNorm(embed_dim),
+            nn.GELU(),
+            nn.Dropout(dropout)
+        )
+
+    def forward(self, feat_up, feat_low):
+        q_up, q_low = feat_up.unsqueeze(1), feat_low.unsqueeze(1)
+        attn_up, _ = self.cross_attn_up(query=q_up, key=q_low, value=q_low)
+        feat_up_res = self.norm_up(feat_up + attn_up.squeeze(1))
+        attn_low, _ = self.cross_attn_low(query=q_low, key=q_up, value=q_up)
+        feat_low_res = self.norm_low(feat_low + attn_low.squeeze(1))
+        fused = torch.cat([feat_up_res, feat_low_res], dim=-1)
+        return self.fusion_proj(fused)
+
+class SwinV2NADNet(nn.Module):
+    def __init__(self, num_classes=7, pretrained=False):
+        super(SwinV2NADNet, self).__init__()
+        import timm
+        self.backbone = timm.create_model(
+            'swinv2_tiny_window16_256',
+            pretrained=pretrained,
+            num_classes=0
+        )
+        dim = self.backbone.num_features
+
+        self.upper_head = nn.Sequential(
+            nn.Linear(dim, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, num_classes)
+        )
+
+        self.lower_head = nn.Sequential(
+            nn.Linear(dim, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(0.3),
+            nn.Linear(256, num_classes)
+        )
+
+        self.cross_fusion = BidirectionalCrossAttention(embed_dim=dim, num_heads=8, dropout=0.15)
+
+        self.global_head = nn.Sequential(
+            nn.Linear(dim, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(0.4),
+            nn.Linear(256, num_classes)
+        )
+
+    def forward(self, x_up, x_low):
+        feat_up = self.backbone(x_up)
+        feat_low = self.backbone(x_low)
+        logits_up = self.upper_head(feat_up)
+        logits_low = self.lower_head(feat_low)
+        fused = self.cross_fusion(feat_up, feat_low)
+        logits_global = self.global_head(fused)
+        return logits_global, logits_up, logits_low
+
+    @staticmethod
+    def compute_fsi(logits_up, logits_low, epsilon=1e-7):
+        p_up = F.softmax(logits_up, dim=-1) + epsilon
+        p_low = F.softmax(logits_low, dim=-1) + epsilon
+        kl_up_low = F.kl_div(p_low.log(), p_up, reduction='none').sum(dim=-1)
+        kl_low_up = F.kl_div(p_up.log(), p_low, reduction='none').sum(dim=-1)
+        return 0.5 * (kl_up_low + kl_low_up)
 
 class FaceEmotionEngine:
     _instance = None
@@ -33,26 +102,31 @@ class FaceEmotionEngine:
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.labels = EMOTIONS
         self.num_classes = len(self.labels)
+        self.is_loaded = False
+        self.model = None
 
-        # Initialize DAN Model
-        self.model = DAN(num_head=4, num_class=self.num_classes, pretrained=False)
-        
-        checkpoint_path = str(settings.FACE_MODEL_CHECKPOINT)
-        if os.path.exists(checkpoint_path):
-            checkpoint = torch.load(checkpoint_path, map_location=self.device)
-            state_dict = checkpoint.get('model_state_dict', checkpoint)
-            self.model.load_state_dict(state_dict, strict=False)
-            self.model.to(self.device)
-            self.model.eval()
-            self.is_loaded = True
-            print(f"[FaceEmotionEngine] Loaded RAF-DB DAN model from {checkpoint_path} on {self.device}")
-        else:
+        # Load SwinV2 NAD-Net
+        try:
+            self.model = SwinV2NADNet(num_classes=self.num_classes, pretrained=False)
+            checkpoint_path = str(settings.FACE_MODEL_CHECKPOINT)
+            if os.path.exists(checkpoint_path):
+                checkpoint = torch.load(checkpoint_path, map_location=self.device)
+                state_dict = checkpoint.get('model_state_dict', checkpoint)
+                self.model.load_state_dict(state_dict, strict=True)
+                self.model.to(self.device)
+                self.model.eval()
+                self.is_loaded = True
+                print(f"[FaceEmotionEngine] Loaded SwinV2 NAD-Net model from {checkpoint_path} on {self.device}")
+            else:
+                print(f"[FaceEmotionEngine] Warning: Checkpoint not found at {checkpoint_path}, using fallback.")
+        except Exception as e:
+            print(f"[FaceEmotionEngine] Error loading SwinV2 model: {e}. Using fallback.")
+            self.model = None
             self.is_loaded = False
-            print(f"[FaceEmotionEngine] Warning: Checkpoint not found at {checkpoint_path}, using fallback.")
 
-        # PyTorch Image Preprocessing
+        # Image Preprocessing (256x256 for SwinV2)
         self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((256, 256)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
@@ -68,7 +142,6 @@ class FaceEmotionEngine:
         return cls._instance
 
     def detect_and_crop_face(self, bgr_image: np.ndarray) -> Tuple[Optional[np.ndarray], Optional[Tuple[int, int, int, int]]]:
-        """Detect the most prominent focused face in the frame and return cropped BGR region and bounding box."""
         if bgr_image is None or bgr_image.size == 0:
             return None, None
             
@@ -82,17 +155,14 @@ class FaceEmotionEngine:
 
         h, w = int(bgr_image.shape[0]), int(bgr_image.shape[1])
         if len(faces) == 0:
-            # Fallback: focus on central 70% region if face detector misses edge angles
             margin_y = int(0.15 * h)
             margin_x = int(0.15 * w)
             crop = bgr_image[margin_y:h-margin_y, margin_x:w-margin_x]
             return crop, (int(margin_x), int(margin_y), int(w - 2*margin_x), int(h - 2*margin_y))
 
-        # Select largest bounding box (main astronaut in focus)
         faces = sorted(faces, key=lambda b: int(b[2]) * int(b[3]), reverse=True)
         x, y, fw, fh = int(faces[0][0]), int(faces[0][1]), int(faces[0][2]), int(faces[0][3])
 
-        # Expand margin around face for better expression context
         margin_x = int(0.12 * fw)
         margin_y = int(0.12 * fh)
         x1 = max(0, x - margin_x)
@@ -103,24 +173,32 @@ class FaceEmotionEngine:
         face_crop = bgr_image[y1:y2, x1:x2]
         return face_crop, (int(x), int(y), int(fw), int(fh))
 
-    def predict_bgr_crop(self, face_bgr: np.ndarray) -> Tuple[str, float, Dict[str, float]]:
-        """Run DAN neural network inference on a cropped face."""
-        if not self.is_loaded or face_bgr is None or face_bgr.size == 0:
-            return "Neutral", 0.85, {emo: (0.85 if emo == "Neutral" else 0.025) for emo in self.labels}
+    def predict_bgr_crop(self, face_bgr: np.ndarray) -> Tuple[str, float, Dict[str, float], float]:
+        """Run NAD-Net neural network inference on a cropped face."""
+        if not self.is_loaded or self.model is None or face_bgr is None or face_bgr.size == 0:
+            return "Neutral", 0.85, {emo: (0.85 if emo == "Neutral" else 0.025) for emo in self.labels}, 0.0
 
         rgb_image = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(rgb_image)
-        tensor = self.transform(pil_image).unsqueeze(0).to(self.device)
+        w, h = pil_image.size
+
+        # Upper (top 55%) and Lower (bottom 55%) regional face crops
+        upper_img = pil_image.crop((0, 0, w, int(h * 0.55)))
+        lower_img = pil_image.crop((0, int(h * 0.45), w, h))
+
+        t_up = self.transform(upper_img).unsqueeze(0).to(self.device)
+        t_low = self.transform(lower_img).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
-            out, _, _ = self.model(tensor)
-            probs = torch.softmax(out, dim=1)[0]
+            logits_global, logits_up, logits_low = self.model(t_up, t_low)
+            probs = torch.softmax(logits_global, dim=1)[0]
+            fsi = SwinV2NADNet.compute_fsi(logits_up, logits_low).item()
             pred_idx = int(torch.argmax(probs).item())
             pred_label = str(self.labels[pred_idx])
             pred_score = float(probs[pred_idx].item())
             all_scores = {str(self.labels[i]): round(float(probs[i].item()), 4) for i in range(len(self.labels))}
 
-        return pred_label, pred_score, all_scores
+        return pred_label, pred_score, all_scores, round(float(fsi), 4)
 
     def analyze_image_bytes(self, image_bytes: bytes) -> Dict[str, Any]:
         """Process a single image payload."""
@@ -132,17 +210,16 @@ class FaceEmotionEngine:
                 "face_detected": False,
                 "frames_analyzed": 0,
                 "duration_seconds": 0.0,
-                "details": {"bounding_box": None, "resolution": [640, 480]}
+                "details": {"bounding_box": None, "resolution": [640, 480], "fsi_suppression_index": 0.0}
             }
 
         np_arr = np.frombuffer(image_bytes, np.uint8)
         bgr_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         if bgr_image is None or bgr_image.size == 0:
-            # Fallback for corrupted/mock frame
-            bgr_image = np.full((224, 224, 3), 128, dtype=np.uint8)
+            bgr_image = np.full((256, 256, 3), 128, dtype=np.uint8)
 
         face_crop, bbox = self.detect_and_crop_face(bgr_image)
-        label, conf, scores = self.predict_bgr_crop(face_crop)
+        label, conf, scores, fsi = self.predict_bgr_crop(face_crop)
 
         bbox_list = [int(v) for v in bbox] if bbox else None
         res_list = [int(bgr_image.shape[1]), int(bgr_image.shape[0])]
@@ -156,16 +233,14 @@ class FaceEmotionEngine:
             "duration_seconds": 0.0,
             "details": {
                 "bounding_box": bbox_list,
-                "resolution": res_list
+                "resolution": res_list,
+                "fsi_suppression_index": fsi,
+                "model_architecture": "SwinV2-NADNet"
             }
         }
 
     def analyze_video_stream_or_clip(self, video_bytes: bytes, target_duration_sec: float = 10.0) -> Dict[str, Any]:
-        """
-        Process a 10-second focused video clip or webm stream captured from astronaut camera.
-        Extracts representative frames across the 10s duration, tracks the face, 
-        evaluates temporal stability and outputs aggregated emotion statistics.
-        """
+        """Process a video clip from astronaut camera."""
         if not video_bytes or len(video_bytes) == 0:
             return self.analyze_image_bytes(b"")
 
@@ -187,6 +262,7 @@ class FaceEmotionEngine:
             sample_indices = set(np.linspace(0, max(total_frames - 1, 0), num=num_samples, dtype=int)) if total_frames > 0 else {0}
 
             frame_predictions: List[Dict[str, float]] = []
+            fsi_values: List[float] = []
             faces_found = 0
             current_frame_idx = 0
 
@@ -199,8 +275,9 @@ class FaceEmotionEngine:
                     face_crop, bbox = self.detect_and_crop_face(frame)
                     if bbox is not None:
                         faces_found += 1
-                    _, _, scores = self.predict_bgr_crop(face_crop)
+                    _, _, scores, fsi = self.predict_bgr_crop(face_crop)
                     frame_predictions.append(scores)
+                    fsi_values.append(fsi)
 
                 current_frame_idx += 1
 
@@ -220,6 +297,7 @@ class FaceEmotionEngine:
 
             dominant_emo = str(max(aggregated_scores, key=aggregated_scores.get))
             confidence = float(aggregated_scores[dominant_emo])
+            mean_fsi = round(float(np.mean(fsi_values)), 4) if fsi_values else 0.0
 
             return {
                 "dominant_emotion": dominant_emo,
@@ -231,7 +309,9 @@ class FaceEmotionEngine:
                 "details": {
                     "focus_duration_window": f"{target_duration_sec:.1f}s",
                     "face_detection_ratio": round(float(faces_found / len(frame_predictions)), 2),
-                    "temporal_samples": int(len(frame_predictions))
+                    "temporal_samples": int(len(frame_predictions)),
+                    "fsi_suppression_index": mean_fsi,
+                    "model_architecture": "SwinV2-NADNet"
                 }
             }
 
@@ -242,18 +322,16 @@ class FaceEmotionEngine:
                 except Exception:
                     pass
 
-# Singleton accessor
 def get_face_engine():
     return FaceEmotionEngine.get_instance()
 
 async def predict_face_emotion(file_bytes: bytes) -> Dict[str, Any]:
-    """Smart router for image or video face emotion analysis."""
     engine = get_face_engine()
     try:
         is_video = (
-            file_bytes.startswith(b'\x1a\x45\xdf\xa3') or  # EBML (WebM/MKV)
-            b'ftyp' in file_bytes[:32] or                   # MP4/MOV
-            file_bytes.startswith(b'RIFF') and b'AVI ' in file_bytes[:16] # AVI
+            file_bytes.startswith(b'\x1a\x45\xdf\xa3') or
+            b'ftyp' in file_bytes[:32] or
+            (file_bytes.startswith(b'RIFF') and b'AVI ' in file_bytes[:16])
         )
         if is_video:
             return engine.analyze_video_stream_or_clip(file_bytes, target_duration_sec=10.0)

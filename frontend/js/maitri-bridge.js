@@ -3,11 +3,13 @@
  * Centralized connector between Frontend and FastAPI Backend on port 8000.
  */
 
-const API_BASE = (window.location.port === '8000') 
+var API_BASE = (typeof window !== 'undefined' && window.location && window.location.port === '8000') 
   ? window.location.origin 
   : 'http://localhost:8000';
 
-const API_V1 = `${API_BASE}/api/v1`;
+var API_V1 = `${API_BASE}/api/v1`;
+window.API_BASE = API_BASE;
+window.API_V1 = API_V1;
 
 // Default / Initial Session State
 const DEFAULT_TELEMETRY = {
@@ -129,6 +131,20 @@ const maitriApi = {
             body: JSON.stringify(summaryPayload)
         });
         if (!response.ok) throw new Error(`Summary API HTTP ${response.status}`);
+        return await response.json();
+    },
+
+    // Multimodal End-to-End Prediction (Entropy-Gated Fusion & CSI)
+    predictMultimodal: async (formDataOrJson) => {
+        const isFormData = typeof FormData !== 'undefined' && formDataOrJson instanceof FormData;
+        const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
+        const body = isFormData ? formDataOrJson : JSON.stringify(formDataOrJson);
+        const response = await fetch(`${API_V1}/predict_multimodal`, {
+            method: 'POST',
+            headers: headers,
+            body: body
+        });
+        if (!response.ok) throw new Error(`Predict Multimodal API HTTP ${response.status}`);
         return await response.json();
     }
 };
