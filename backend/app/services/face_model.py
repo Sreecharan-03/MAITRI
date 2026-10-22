@@ -141,9 +141,9 @@ class FaceEmotionEngine:
             cls._instance = FaceEmotionEngine()
         return cls._instance
 
-    def detect_and_crop_face(self, bgr_image: np.ndarray) -> Tuple[Optional[np.ndarray], Optional[Tuple[int, int, int, int]]]:
+    def detect_and_crop_face(self, bgr_image: np.ndarray) -> Tuple[Optional[np.ndarray], Optional[Tuple[int, int, int, int]], bool]:
         if bgr_image is None or bgr_image.size == 0:
-            return None, None
+            return None, None, False
             
         gray = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
         faces = self.face_cascade.detectMultiScale(
@@ -158,7 +158,7 @@ class FaceEmotionEngine:
             margin_y = int(0.15 * h)
             margin_x = int(0.15 * w)
             crop = bgr_image[margin_y:h-margin_y, margin_x:w-margin_x]
-            return crop, (int(margin_x), int(margin_y), int(w - 2*margin_x), int(h - 2*margin_y))
+            return crop, (int(margin_x), int(margin_y), int(w - 2*margin_x), int(h - 2*margin_y)), False
 
         faces = sorted(faces, key=lambda b: int(b[2]) * int(b[3]), reverse=True)
         x, y, fw, fh = int(faces[0][0]), int(faces[0][1]), int(faces[0][2]), int(faces[0][3])
@@ -171,12 +171,13 @@ class FaceEmotionEngine:
         y2 = min(h, y + fh + margin_y)
 
         face_crop = bgr_image[y1:y2, x1:x2]
-        return face_crop, (int(x), int(y), int(fw), int(fh))
+        return face_crop, (int(x), int(y), int(fw), int(fh)), True
 
     def predict_bgr_crop(self, face_bgr: np.ndarray) -> Tuple[str, float, Dict[str, float], float]:
         """Run NAD-Net neural network inference on a cropped face."""
         if not self.is_loaded or self.model is None or face_bgr is None or face_bgr.size == 0:
-            return "Neutral", 0.85, {emo: (0.85 if emo == "Neutral" else 0.025) for emo in self.labels}, 0.0
+            uniform_prob = round(1.0 / len(self.labels), 4)
+            return "Indeterminate", 0.0, {emo: uniform_prob for emo in self.labels}, 0.0
 
         rgb_image = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(rgb_image)
@@ -204,31 +205,41 @@ class FaceEmotionEngine:
         """Process a single image payload."""
         if not image_bytes or len(image_bytes) == 0:
             return {
-                "dominant_emotion": "Neutral",
-                "confidence": 0.85,
-                "scores": {emo: (0.85 if emo == "Neutral" else 0.025) for emo in self.labels},
+                "dominant_emotion": "No Face Detected",
+                "confidence": 0.0,
+                "scores": {emo: 0.0 for emo in self.labels},
                 "face_detected": False,
                 "frames_analyzed": 0,
                 "duration_seconds": 0.0,
-                "details": {"bounding_box": None, "resolution": [640, 480], "fsi_suppression_index": 0.0}
+                "details": {"bounding_box": None, "resolution": [0, 0], "fsi_suppression_index": 0.0, "error": "Empty payload received"}
             }
 
         np_arr = np.frombuffer(image_bytes, np.uint8)
         bgr_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        
+        # Fallback to PIL if OpenCV imdecode failed
         if bgr_image is None or bgr_image.size == 0:
-            bgr_image = np.full((256, 256, 3), 128, dtype=np.uint8)
+            try:
+                import io
+                from PIL import Image
+                pil_img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+                bgr_image = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+            except Exception:
+                bgr_image = np.full((256, 256, 3), 128, dtype=np.uint8)
 
-        face_crop, bbox = self.detect_and_crop_face(bgr_image)
+        face_crop, bbox, face_detected = self.detect_and_crop_face(bgr_image)
         label, conf, scores, fsi = self.predict_bgr_crop(face_crop)
 
         bbox_list = [int(v) for v in bbox] if bbox else None
         res_list = [int(bgr_image.shape[1]), int(bgr_image.shape[0])]
 
+        print(f"[FaceEmotionEngine] Live Image Prediction: {label} (conf: {conf:.4f}, fsi: {fsi:.4f}, face_detected: {face_detected}) | Scores: {scores}")
+
         return {
             "dominant_emotion": str(label),
             "confidence": round(float(conf), 4),
             "scores": scores,
-            "face_detected": bbox is not None,
+            "face_detected": face_detected,
             "frames_analyzed": 1,
             "duration_seconds": 0.0,
             "details": {
@@ -254,26 +265,26 @@ class FaceEmotionEngine:
                 cap.release()
                 return self.analyze_image_bytes(video_bytes)
 
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             fps = float(cap.get(cv2.CAP_PROP_FPS) or 25.0)
-            actual_duration = float(total_frames / fps if total_frames > 0 else target_duration_sec)
-
-            num_samples = int(min(max(total_frames, 1), 30))
-            sample_indices = set(np.linspace(0, max(total_frames - 1, 0), num=num_samples, dtype=int)) if total_frames > 0 else {0}
+            if fps <= 0 or np.isnan(fps):
+                fps = 25.0
 
             frame_predictions: List[Dict[str, float]] = []
             fsi_values: List[float] = []
             faces_found = 0
             current_frame_idx = 0
+            max_frames_to_read = 300
 
-            while cap.isOpened() and current_frame_idx <= (total_frames or 300):
+            # Read all available frames sequentially without relying on CAP_PROP_FRAME_COUNT
+            while cap.isOpened() and current_frame_idx < max_frames_to_read:
                 ret, frame = cap.read()
                 if not ret or frame is None:
                     break
 
-                if current_frame_idx in sample_indices:
-                    face_crop, bbox = self.detect_and_crop_face(frame)
-                    if bbox is not None:
+                step = 1 if current_frame_idx < 10 else 3
+                if current_frame_idx % step == 0 and len(frame_predictions) < 30:
+                    face_crop, bbox, detected = self.detect_and_crop_face(frame)
+                    if detected:
                         faces_found += 1
                     _, _, scores, fsi = self.predict_bgr_crop(face_crop)
                     frame_predictions.append(scores)
@@ -282,9 +293,21 @@ class FaceEmotionEngine:
                 current_frame_idx += 1
 
             cap.release()
+            actual_duration = float(current_frame_idx / fps if current_frame_idx > 0 else target_duration_sec)
 
             if not frame_predictions:
-                return self.analyze_image_bytes(video_bytes)
+                return {
+                    "dominant_emotion": "No Frames Decoded",
+                    "confidence": 0.0,
+                    "scores": {emo: 0.0 for emo in self.labels},
+                    "face_detected": False,
+                    "frames_analyzed": 0,
+                    "duration_seconds": 0.0,
+                    "details": {
+                        "error": "OpenCV video decoder could not extract video frames from container. Please submit a direct snapshot or JPEG frame.",
+                        "model_architecture": "SwinV2-NADNet"
+                    }
+                }
 
             aggregated_scores: Dict[str, float] = {str(emo): 0.0 for emo in self.labels}
             for pred in frame_predictions:
@@ -298,6 +321,8 @@ class FaceEmotionEngine:
             dominant_emo = str(max(aggregated_scores, key=aggregated_scores.get))
             confidence = float(aggregated_scores[dominant_emo])
             mean_fsi = round(float(np.mean(fsi_values)), 4) if fsi_values else 0.0
+
+            print(f"[FaceEmotionEngine] Live Video Prediction ({len(frame_predictions)} frames): {dominant_emo} (conf: {confidence:.4f}, fsi: {mean_fsi:.4f}) | Scores: {aggregated_scores}")
 
             return {
                 "dominant_emotion": dominant_emo,
