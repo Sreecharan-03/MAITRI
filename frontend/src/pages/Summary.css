@@ -1,0 +1,45 @@
+/* Summary.css - Dedicated styles for Step 5 Mission Executive Summary */
+
+.readiness-ring-track {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recommendation-card-modern {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -4px rgba(6, 182, 212, 0.16);
+}
+
+.cockpit-sensor-card {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.cockpit-sensor-card:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Print styling */
+@media print {
+  header, footer, .no-print {
+    display: none !important;
+  }
+  body, .summary-main-wrapper {
+    background: #0B0F19 !important;
+    color: #FFFFFF !important;
+  }
+  .glass-panel, .glass-card {
+    background: #111827 !important;
+    border-color: #374151 !important;
+  }
+}
+
+/* Mobile responsive padding */
+@media (max-width: 640px) {
+  .summary-hero-card {
+    padding: 1.25rem;
+  }
+}

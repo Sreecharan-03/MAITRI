@@ -1,0 +1,82 @@
+/* FaceScan.css - Dedicated styles for Step 1 Face Scan */
+
+.camera-feed-mirror {
+  transform: scaleX(-1);
+  object-fit: cover;
+}
+
+/* Scanning Reticle HUD Corner Accents */
+.reticle-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #06B6D4;
+  pointer-events: none;
+}
+
+.corner-tl {
+  top: 16px;
+  left: 16px;
+  border-top-width: 3px;
+  border-left-width: 3px;
+  border-top-left-radius: 6px;
+}
+
+.corner-tr {
+  top: 16px;
+  right: 16px;
+  border-top-width: 3px;
+  border-right-width: 3px;
+  border-top-right-radius: 6px;
+}
+
+.corner-bl {
+  bottom: 16px;
+  left: 16px;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+  border-bottom-left-radius: 6px;
+}
+
+.corner-br {
+  bottom: 16px;
+  right: 16px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+  border-bottom-right-radius: 6px;
+}
+
+/* Laser Scanning Line Animation */
+@keyframes scanline {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    top: 92%;
+    opacity: 0.2;
+  }
+}
+
+.laser-scan-line {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #06b6d4 50%, transparent 100%);
+  box-shadow: 0 0 14px #06b6d4, 0 0 4px #38bdf8;
+  animation: scanline 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Responsive camera container */
+@media (max-width: 640px) {
+  .reticle-corner {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+  }
+}

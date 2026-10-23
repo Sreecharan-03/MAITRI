@@ -1,0 +1,31 @@
+/* DailyLog.css - Dedicated styles for Step 3 Daily Crew Log */
+
+.journal-textarea-modern {
+  resize: vertical;
+  min-height: 140px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.journal-textarea-modern:focus {
+  outline: none;
+  border-color: rgba(6, 182, 212, 0.7);
+  box-shadow: 0 0 18px rgba(6, 182, 212, 0.18);
+}
+
+.chip-tag-button {
+  transition: all 0.2s ease;
+}
+
+.chip-tag-button:hover {
+  background-color: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: #38bdf8;
+}
+
+@media (max-width: 640px) {
+  .daily-log-card {
+    padding: 1.25rem;
+  }
+}
