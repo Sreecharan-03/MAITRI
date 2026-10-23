@@ -34,9 +34,34 @@
   </script>
   <link rel="stylesheet" href="css/face-scan.css">
   <style>
+    html, body {
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      overflow-x: hidden;
+    }
+
+    /* Sleek Aerospace Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #02040A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.7);
+      border-radius: 9999px;
+      border: 2px solid #02040A;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(51, 65, 85, 0.7) #02040A;
     }
 
     #camera-video {

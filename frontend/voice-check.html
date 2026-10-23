@@ -36,11 +36,29 @@
         padding: 0;
         font-family: 'Inter', sans-serif;
         overflow-x: hidden;
+        scroll-behavior: smooth;
       }
+    }
 
-      body {
-        overscroll-behavior: none;
-      }
+    /* Sleek Aerospace Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #02040A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.7);
+      border-radius: 9999px;
+      border: 2px solid #02040A;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(51, 65, 85, 0.7) #02040A;
     }
 
     @keyframes soundwave {
@@ -126,7 +144,7 @@
         <h1 class="text-white text-xl sm:text-2xl md:text-[28px] font-bold tracking-tight mb-1.5 sm:mb-2">Speak Out Loud
         </h1>
         <p class="text-slate-400 text-xs sm:text-sm md:text-[15px] max-w-md mx-auto leading-relaxed">
-          Read the prompt below or speak freely for 5–10 seconds so the Wav2Vec2 model can evaluate your vocal tone &
+          Read the prompt below or speak freely for at least 15 seconds so the Wav2Vec2 model can evaluate your vocal tone &amp;
           prosody.
         </p>
       </div>
@@ -161,8 +179,11 @@
           </svg>
         </button>
         <!-- Timer / Status Indicator -->
-        <span class="text-slate-300 font-medium text-xs sm:text-sm mt-3 text-center" id="recording-status">Click mic to
-          start speaking (5s)</span>
+        <span class="text-slate-300 font-medium text-xs sm:text-sm mt-3 text-center" id="recording-status">Click mic to record voice (15s sample)</span>
+        <!-- 15s Countdown Progress Bar -->
+        <div class="w-48 bg-slate-800/80 rounded-full h-1.5 mt-2.5 overflow-hidden border border-slate-700/50" id="rec-progress-container" style="display: none;">
+          <div class="bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400 h-full rounded-full transition-all duration-300 ease-linear" id="rec-progress-bar" style="width: 0%"></div>
+        </div>
         <!-- Minimal 5-bar animated audio wave -->
         <div class="flex items-center gap-1.5 h-6 sm:h-7 mt-2.5 sm:mt-3" id="audio-wave-bars">
           <span class="w-1 bg-cyan-400 rounded-full wave-bar-1 opacity-80"></span>
@@ -240,10 +261,80 @@
       let audioStream = null;
       let mediaRecorder = null;
       let audioChunks = [];
+      const TOTAL_SECONDS = 15;
+      let countdown = TOTAL_SECONDS;
+      let countTimer = null;
+
+      const recProgressContainer = document.getElementById('rec-progress-container');
+      const recProgressBar = document.getElementById('rec-progress-bar');
+
+      async function stopAndProcessRecording() {
+        if (!isRecording) return;
+        clearInterval(countTimer);
+
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          try { mediaRecorder.stop(); } catch(e) {}
+        }
+        if (audioStream) {
+          audioStream.getTracks().forEach(t => t.stop());
+        }
+
+        statusText.textContent = "Processing 15s Wav2Vec2 Acoustic Prosody...";
+        statusText.className = "text-cyan-400 font-medium text-xs sm:text-sm mt-3 animate-pulse";
+        if (recProgressContainer) recProgressContainer.style.display = 'none';
+
+        await new Promise(r => setTimeout(r, 400));
+        const audioBlob = audioChunks.length > 0
+          ? new Blob(audioChunks, { type: 'audio/webm' })
+          : new Blob([new Uint8Array(1024)], { type: 'audio/wav' });
+
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'astronaut_voice_15s.webm');
+          const res = await fetch(`${API_BASE}/api/v1/step2/voice`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json();
+
+          document.getElementById('voice-dominant-label').textContent = (data.dominant_emotion || "Calm").toUpperCase();
+          document.getElementById('voice-pitch-label').textContent = `${data.pitch_hz || 118.2} Hz`;
+          document.getElementById('voice-conf-label').textContent = `${Math.round((data.confidence || 0.84) * 100)}%`;
+
+          updateTelemetryState('voice_result', data);
+          statusText.textContent = "✓ 15s Voice Recording Synchronized";
+          statusText.className = "text-emerald-400 font-medium text-xs sm:text-sm mt-3";
+
+        } catch (err) {
+          console.error("Voice API error:", err);
+          statusText.textContent = "✓ 15s Voice Recording Processed (Offline Cache)";
+          statusText.className = "text-slate-300 font-medium text-xs sm:text-sm mt-3";
+        }
+
+        micBtn.classList.remove('bg-rose-500/30', 'border-rose-400', 'animate-pulse');
+        isRecording = false;
+      }
 
       micBtn?.addEventListener('click', async () => {
-        if (isRecording) return;
+        if (isRecording) {
+          // Strictly enforce at least 15 seconds recording
+          if (countdown > 0) {
+            statusText.textContent = `⚠️ Minimum 15s required (${countdown}s left) — please keep speaking`;
+            statusText.className = "text-amber-400 font-medium text-xs sm:text-sm mt-3 animate-pulse";
+            setTimeout(() => {
+              if (isRecording && countdown > 0) {
+                statusText.textContent = `Recording audio... (${countdown}s remaining • 15s minimum)`;
+                statusText.className = "text-rose-400 font-medium text-xs sm:text-sm mt-3 animate-pulse";
+              }
+            }, 1800);
+            return;
+          }
+          await stopAndProcessRecording();
+          return;
+        }
+
         isRecording = true;
+        countdown = TOTAL_SECONDS;
 
         try {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -256,56 +347,23 @@
         }
 
         micBtn.classList.add('bg-rose-500/30', 'border-rose-400', 'animate-pulse');
-        statusText.textContent = "Listening... Speak prompt aloud (5s)";
+        statusText.textContent = `Recording audio... (${TOTAL_SECONDS}s remaining • 15s minimum)`;
         statusText.className = "text-rose-400 font-medium text-xs sm:text-sm mt-3 animate-pulse";
+        
+        if (recProgressContainer) {
+          recProgressContainer.style.display = 'block';
+          recProgressBar.style.width = '0%';
+        }
 
-        let countdown = 5;
-        const countTimer = setInterval(async () => {
+        countTimer = setInterval(async () => {
           countdown--;
+          const pct = Math.round(((TOTAL_SECONDS - countdown) / TOTAL_SECONDS) * 100);
+          if (recProgressBar) recProgressBar.style.width = `${pct}%`;
+
           if (countdown > 0) {
-            statusText.textContent = `Recording audio... (${countdown}s remaining)`;
+            statusText.textContent = `Recording audio... (${countdown}s remaining • 15s minimum)`;
           } else {
-            clearInterval(countTimer);
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-              mediaRecorder.stop();
-            }
-            if (audioStream) {
-              audioStream.getTracks().forEach(t => t.stop());
-            }
-
-            statusText.textContent = "Processing Wav2Vec2 Acoustic Prosody...";
-            statusText.className = "text-cyan-400 font-medium text-xs sm:text-sm mt-3";
-
-            await new Promise(r => setTimeout(r, 400));
-            const audioBlob = audioChunks.length > 0
-              ? new Blob(audioChunks, { type: 'audio/webm' })
-              : new Blob([new Uint8Array(1024)], { type: 'audio/wav' });
-
-            try {
-              const formData = new FormData();
-              formData.append('audio', audioBlob, 'astronaut_voice.webm');
-              const res = await fetch(`${API_BASE}/api/v1/step2/voice`, {
-                method: 'POST',
-                body: formData
-              });
-              const data = await res.json();
-
-              document.getElementById('voice-dominant-label').textContent = (data.dominant_emotion || "Calm").toUpperCase();
-              document.getElementById('voice-pitch-label').textContent = `${data.pitch_hz || 118.2} Hz`;
-              document.getElementById('voice-conf-label').textContent = `${Math.round((data.confidence || 0.84) * 100)}%`;
-
-              updateTelemetryState('voice_result', data);
-              statusText.textContent = "✓ Voice Check Synchronized";
-              statusText.className = "text-emerald-400 font-medium text-xs sm:text-sm mt-3";
-
-            } catch (err) {
-              console.error("Voice API error:", err);
-              statusText.textContent = "✓ Voice Check Processed (Offline Cache)";
-              statusText.className = "text-slate-300 font-medium text-xs sm:text-sm mt-3";
-            }
-
-            micBtn.classList.remove('bg-rose-500/30', 'border-rose-400', 'animate-pulse');
-            isRecording = false;
+            await stopAndProcessRecording();
           }
         }, 1000);
       });

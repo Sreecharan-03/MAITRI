@@ -45,11 +45,29 @@
         background-color: #02040A;
         color: #F8FAFC;
         overflow-x: hidden;
+        scroll-behavior: smooth;
       }
     }
 
+    /* Sleek Aerospace Scrollbar */
     ::-webkit-scrollbar {
-      display: none;
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #02040A;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.7);
+      border-radius: 9999px;
+      border: 2px solid #02040A;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(51, 65, 85, 0.7) #02040A;
     }
   </style>
 </head>
