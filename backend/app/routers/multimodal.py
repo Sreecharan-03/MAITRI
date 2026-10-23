@@ -111,25 +111,25 @@ async def predict_multimodal(request: Request):
         overall_score = round(max(3.5, min(9.5, 9.8 - (csi * 6.0))), 1)
 
         if discordant:
-            status = "Autonomically Elevated with Marked Emotional Discordance (Covert Operational Strain)"
+            status = "You look and sound calm, but your body is showing subtle signs of tiredness from today's work. Overall, you are doing well, but taking a short breather will keep your energy steady."
             recommendations = [
-                "Initiate 15-minute vagal nerve down-regulation / resonance box breathing cycle",
-                "Spectrally titrate crew habitat lighting to 480nm-attenuated warm circadian spectrum",
-                "Defer non-critical EVA procedural maintenance to next 36-hour operational block"
+                "Take a 10-minute quiet break before starting your next scheduled checklist.",
+                "Dim the bright overhead cabin lights to help your eyes relax.",
+                "Drink a cup of water and do 5 deep, slow breaths."
             ]
         elif csi > 0.40:
-            status = "Moderate Cumulative Fatigue with Subclinical Sympathetic Elevation"
+            status = "Your check-in shows moderate tiredness after a demanding shift. A short rest window will help you recharge comfortably."
             recommendations = [
-                "Schedule 30-minute cognitive decompression pause prior to next communication window",
-                "Administer targeted electrolyte and hydration check",
-                "Conduct secondary acoustic and biometric sweep on next orbital pass"
+                "Take a 20-minute rest or stretch break in the crew quarters.",
+                "Drink some water or warm tea and have a light snack.",
+                "Check in with your crewmates or listen to relaxing audio before sleep."
             ]
         else:
-            status = "Nominal Cognitive & Physiological Homeostasis (Optimal Flight Baseline)"
+            status = "You are doing great today! Your voice, expressions, and vitals are steady and balanced."
             recommendations = [
-                "Maintain standard task and mission operational schedule",
-                "Routine biometric monitoring active on telemetry channel",
-                "No clinical countermeasures indicated at present sol"
+                "Continue with your normal planned activities and tasks.",
+                "Keep staying hydrated throughout the rest of your shift.",
+                "Take short routine breaks between task blocks as planned."
             ]
 
         summary_block = {

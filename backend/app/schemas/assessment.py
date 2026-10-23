@@ -110,7 +110,11 @@ class AstronautSummaryRequest(BaseModel):
 
 class AstronautSummaryResponse(BaseModel):
     overall_wellbeing_score: float = Field(default=7.8, description="Overall score out of 10.0")
+    overall_score: Optional[float] = Field(default=None, description="Score alias")
     psychological_status: str = Field(default="Stable", description="High-level status summary")
+    status: Optional[str] = Field(default=None, description="Status alias")
     astronaut_specific_assessment: str = Field(..., description="Comprehensive clinical psychological assessment")
+    detailed_assessment: Optional[str] = Field(default=None, description="Assessment alias")
     recommended_actions: List[str] = Field(default_factory=list, description="List of operational countermeasures and recovery protocols")
+    recommendations: Optional[List[str]] = Field(default=None, description="Recommendations alias")
     discordance_analysis: Optional[str] = Field(default=None, description="Analysis of cross-modal alignment/mismatch")
