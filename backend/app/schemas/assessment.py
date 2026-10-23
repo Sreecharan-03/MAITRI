@@ -109,11 +109,15 @@ class AstronautSummaryRequest(BaseModel):
     apiKey: Optional[str] = None
 
 class AstronautSummaryResponse(BaseModel):
+    simple_verdict: Optional[str] = Field(default=None, description="Clear, plain-English bottom-line verdict")
+    plain_explanation: Optional[str] = Field(default=None, description="Empathetic, jargon-free 2-3 sentence explanation")
+    actionable_tips: Optional[List[str]] = Field(default_factory=list, description="Practical, simple action steps")
+    readiness_score: Optional[int] = Field(default=80, description="Readiness score out of 100")
     overall_wellbeing_score: float = Field(default=7.8, description="Overall score out of 10.0")
     overall_score: Optional[float] = Field(default=None, description="Score alias")
     psychological_status: str = Field(default="Stable", description="High-level status summary")
     status: Optional[str] = Field(default=None, description="Status alias")
-    astronaut_specific_assessment: str = Field(..., description="Comprehensive clinical psychological assessment")
+    astronaut_specific_assessment: str = Field(..., description="Comprehensive psychological assessment")
     detailed_assessment: Optional[str] = Field(default=None, description="Assessment alias")
     recommended_actions: List[str] = Field(default_factory=list, description="List of operational countermeasures and recovery protocols")
     recommendations: Optional[List[str]] = Field(default=None, description="Recommendations alias")

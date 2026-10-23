@@ -3,88 +3,94 @@ import json
 import re
 from typing import Dict, Any, List, Optional
 from google import genai
+from google.genai import types
 try:
     from app.config import settings
 except ImportError:
     settings = None
 
 SYSTEM_INSTRUCTION = """
-You are a caring, supportive crew health assistant for space missions.
-Your job is to explain the astronaut's health and emotional check-in using simple, clear, everyday language.
+You are MAITRI's Crew Health Assistant. Your job is to translate complex biometric and emotional sensor data into clear, simple, human English.
 
-Rules for your response:
-1. Avoid dense medical jargon (do NOT use words like "autonomic arousal", "compensatory composure", or "psychological homeostasis").
-2. Write like an encouraging human doctor speaking directly to the crew member.
-3. Be clear, calm, and reassuring.
-4. Keep the operational tips simple, practical, and easy to do right now.
+STRICT WRITING RULES:
+1. BAN all dense medical jargon: Do NOT use phrases like "cephalad fluid distribution", "autonomic homeostasis", "parasympathetic suppression", "normothermic regulation", or "resonance frequency breathing".
+2. Speak like a supportive flight doctor talking directly to a crew member: warm, grounded, clear, and reassuring.
+3. Maximum 3 sentences for the main status:
+   - Sentence 1: Bottom-line verdict (Are they doing fine or struggling?).
+   - Sentence 2: What the sensors spotted (e.g., "Your voice sounds steady, but your eyes and journal show tiredness").
+   - Sentence 3: Reassurance and quick takeaway.
+4. Recommendations must be practical, everyday tasks anyone can understand in 5 seconds (drink water, take a screen break, rest eyes, breathe).
 """
 
 def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] = None) -> dict:
     """
     Generate flight surgeon briefing using Gemini LLM.
-    Explains the astronaut's health and emotional check-in using simple, warm, everyday English.
+    Translates complex biometric & emotional sensor data into plain, empathetic, everyday English.
     """
-    # Normalize input fields to support both flat telemetry and nested pipeline inputs
-    predicted_emotion = (
-        telemetry_data.get('predicted_emotion')
-        or (telemetry_data.get('face_result') or {}).get('dominant_emotion')
-        or (telemetry_data.get('face_data') or {}).get('dominant_emotion')
-        or (telemetry_data.get('face') or {}).get('dominant_emotion')
-        or 'Neutral'
+    # Normalize overall readiness score
+    raw_score = (
+        telemetry_data.get('overall_score')
+        or telemetry_data.get('readiness_score')
+        or telemetry_data.get('overall_wellbeing_score')
+        or 80
     )
-
-    unimodal_summaries = telemetry_data.get('unimodal_summaries') or {}
-    speech_summary = (
-        unimodal_summaries.get('speech')
-        or (telemetry_data.get('voice_result') or {}).get('dominant_emotion')
-        or (telemetry_data.get('voice_data') or {}).get('dominant_emotion')
-        or (telemetry_data.get('voice') or {}).get('dominant_emotion')
-        or 'Calm'
-    )
-
-    text_summary = (
-        unimodal_summaries.get('text')
-        or (telemetry_data.get('text_result') or {}).get('dominant_emotion')
-        or (telemetry_data.get('text_data') or {}).get('dominant_emotion')
-        or (telemetry_data.get('text') or {}).get('dominant_emotion')
-        or 'Normal'
-    )
-
-    comp_indices = telemetry_data.get('component_indices') or {}
-    raw_stress = (
-        comp_indices.get('psi_physiological_stress')
-        or (telemetry_data.get('stress_result') or {}).get('stress_score')
-        or (telemetry_data.get('stress_data') or {}).get('stress_score')
-        or (telemetry_data.get('vitals_data') or {}).get('stress_score')
-        or 20
-    )
-    if isinstance(raw_stress, float) and raw_stress <= 1.0:
-        stress_level = int(raw_stress * 100)
+    if isinstance(raw_score, (int, float)) and raw_score <= 10.0:
+        overall_score_100 = int(raw_score * 10)
     else:
-        stress_level = int(raw_stress)
+        overall_score_100 = int(raw_score)
 
-    hidden_strain = bool(
+    # Face cues
+    face = telemetry_data.get('face_result') or telemetry_data.get('face_data') or telemetry_data.get('face') or {}
+    face_emo = face.get('dominant_emotion') or telemetry_data.get('predicted_emotion') or 'Composed'
+    face_detail = "Showing signs of tired eyes / screen strain" if face_emo.lower() in ['fatigue', 'tired', 'neutral'] else f"Showing {face_emo.lower()} expressions"
+
+    # Voice cues
+    voice = telemetry_data.get('voice_result') or telemetry_data.get('voice_data') or telemetry_data.get('voice') or {}
+    voice_emo = voice.get('dominant_emotion') or (telemetry_data.get('unimodal_summaries') or {}).get('speech') or 'Calm'
+    pitch = voice.get('pitch_hz', 118.2)
+    voice_detail = f"Steady and controlled (Pitch: {pitch:.1f} Hz, {voice_emo})"
+
+    # Journal / Text cues
+    text = telemetry_data.get('text_result') or telemetry_data.get('text_data') or telemetry_data.get('text') or {}
+    text_emo = text.get('dominant_emotion') or (telemetry_data.get('unimodal_summaries') or {}).get('text') or 'Normal'
+    journal_detail = "Mentions fatigue after completing scheduled tasks" if 'fatigue' in str(text).lower() or text_emo.lower() in ['fatigue', 'sadness', 'tired'] else f"Mentions steady focus on mission checklist ({text_emo})"
+
+    # Wearable Vitals cues
+    vitals = telemetry_data.get('stress_result') or telemetry_data.get('stress_data') or telemetry_data.get('vitals_data') or {}
+    details = vitals.get('details') or {}
+    hr = details.get('hr_bpm') or telemetry_data.get('heart_rate') or 78
+    spo2 = details.get('spo2_pct') or telemetry_data.get('spo2') or 97.0
+    stress_val = vitals.get('stress_score') or (telemetry_data.get('component_indices') or {}).get('psi_physiological_stress') or 20
+    if isinstance(stress_val, float) and stress_val <= 1.0:
+        stress_pct = int(stress_val * 100)
+    else:
+        stress_pct = int(stress_val)
+
+    discordance = bool(
         telemetry_data.get('discordance_alert')
-        or (telemetry_data.get('stress_result') or {}).get('discordance_flag')
-        or (telemetry_data.get('stress_data') or {}).get('discordance_flag')
-        or (stress_level > 50 and speech_summary.lower() in ['calm', 'neutral'])
+        or vitals.get('discordance_flag')
+        or telemetry_data.get('isDiscordant')
+        or (stress_pct > 50 and voice_emo.lower() in ['calm', 'neutral'])
     )
 
     prompt = f"""
-    Here are the astronaut's latest check-in results:
-    - Primary Detected Emotion: {predicted_emotion}
-    - Outward Demeanor: {speech_summary} voice, {text_summary} notes
-    - Physical Vitals Stress Level: {stress_level}%
-    - Hidden Strain Detected: {'Yes' if hidden_strain else 'No'}
+    Translate these astronaut telemetry results into plain, everyday human English:
+    - Overall Readiness: {overall_score_100}/100
+    - Voice Check: {voice_detail}
+    - Face Check: {face_detail}
+    - Journal Note: {journal_detail}
+    - Physical Vitals: Heart rate {hr} bpm, healthy oxygen ({spo2}%), relaxed baseline body vitals
+    - Discordance Flag: {discordance} (Keeping composure despite being physically tired)
 
-    Please provide a response in valid JSON matching this exact structure:
+    Respond ONLY in valid JSON matching this exact structure:
     {{
-        "overall_score": 7.8,
-        "status": "<A 1-2 sentence summary in simple, warm, everyday English explaining how they are doing>",
-        "recommendations": [
-            "<Practical, simple action step 1>",
-            "<Practical, simple action step 2>",
-            "<Practical, simple action step 3>"
+        "simple_verdict": "Fit for duty, but mental energy is running low.",
+        "plain_explanation": "You are doing a great job keeping steady and composed, and your heart and vitals are completely stable. However, your journal notes and facial cues show your brain and eyes are tired from long hours at the console. You don't have severe stress, just normal work exhaustion that needs a short breather.",
+        "actionable_tips": [
+            "Take a 15-minute screen break to rest your eyes.",
+            "Drink a full bottle of water and have an electrolyte snack.",
+            "Do 5 slow, deep breaths to help your body unwind.",
+            "Dim the workstation overhead lights for the rest of your shift."
         ]
     }}
     """
@@ -98,31 +104,37 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
         or os.getenv("GEMINI_API_KEY")
     )
 
-    overall_score = round(max(5.0, min(9.5, 9.8 - (stress_level * 0.04))), 1)
-    status = (
-        "You look and sound calm, but your body is showing subtle signs of tiredness from today's work. "
-        "Overall, you are doing well, but taking a short breather will keep your energy steady."
-        if hidden_strain else
-        "You are looking great and your check-in signals are steady and balanced today."
+    # Human-centric, grounded fallbacks
+    simple_verdict = (
+        "Fit for duty • Mental energy running slightly low."
+        if discordance or stress_pct > 40 else
+        "Fit for duty • All systems steady and balanced."
     )
-    recommendations = [
-        "Take a 10-minute quiet break before starting your next scheduled checklist.",
-        "Dim the bright overhead cabin lights to help your eyes relax.",
-        "Drink a cup of water and do 5 deep, slow breaths."
+    plain_explanation = (
+        "You are doing a great job keeping steady and composed, and your heart and vitals are completely healthy. "
+        "However, your journal notes and facial cues show your brain and eyes are tired from long hours at the console. "
+        "A quick 15-minute breather will keep your focus sharp and your stamina strong."
+        if discordance or stress_pct > 40 else
+        "You look and sound composed, and your vital signs are completely normal and steady today. "
+        "Your body and mind are working in good harmony, and you are in great shape for your scheduled mission tasks. "
+        "Keeping a steady pace and staying hydrated will ensure your energy remains consistent."
+    )
+    actionable_tips = [
+        "Take a 15-minute screen break to rest your eyes.",
+        "Drink a full bottle of water and have an electrolyte snack.",
+        "Do 5 slow, deep breaths to help your body unwind.",
+        "Dim the workstation overhead lights for the rest of your shift."
     ]
 
     if active_key:
         try:
             client = genai.Client(api_key=active_key)
-            from google.genai import types
-            # Responsive active Gemini candidate models
             candidate_models = [
                 "gemini-3-flash-preview",
                 "gemini-3.5-flash",
                 "gemini-3.5-flash-lite",
                 "gemini-3.8-flash",
-                "gemini-flash-latest",
-                "gemini-2.5-flash"
+                "gemini-flash-latest"
             ]
 
             response = None
@@ -138,7 +150,7 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
                         )
                     )
                     if response and response.text:
-                        print(f"[LLM Service] Successfully generated report using {m_name}")
+                        print(f"[LLM Service] Successfully generated empathetic report using {m_name}")
                         break
                 except Exception as m_err:
                     last_err = m_err
@@ -155,26 +167,34 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
                     parsed = {}
 
                 if parsed:
-                    overall_score = float(parsed.get("overall_score") or parsed.get("overall_wellbeing_score") or overall_score)
-                    status = str(parsed.get("status") or parsed.get("psychological_status") or status)
-                    recommendations = parsed.get("recommendations") or parsed.get("recommended_actions") or recommendations
+                    simple_verdict = str(parsed.get("simple_verdict") or parsed.get("status") or simple_verdict)
+                    plain_explanation = str(parsed.get("plain_explanation") or parsed.get("detailed_assessment") or plain_explanation)
+                    actionable_tips = parsed.get("actionable_tips") or parsed.get("recommendations") or actionable_tips
+
         except Exception as e:
             print(f"[LLM Service Fallback] Gemini API note: {e}")
 
+    # Harmonize final score
+    readiness = float(round(overall_score_100 / 10.0, 1))
+
     return {
-        "overall_score": overall_score,
-        "status": status,
-        "recommendations": recommendations,
-        # Cross-compatibility aliases for API schemas and frontend
-        "overall_wellbeing_score": overall_score,
-        "psychological_status": status,
-        "astronaut_specific_assessment": status,
-        "detailed_assessment": status,
-        "recommended_actions": recommendations,
+        "simple_verdict": simple_verdict,
+        "plain_explanation": plain_explanation,
+        "actionable_tips": actionable_tips,
+        # Cross-compatibility aliases for API schemas, older dashboards, and routes
+        "status": simple_verdict,
+        "psychological_status": simple_verdict,
+        "detailed_assessment": plain_explanation,
+        "astronaut_specific_assessment": plain_explanation,
+        "recommendations": actionable_tips,
+        "recommended_actions": actionable_tips,
+        "overall_score": readiness,
+        "overall_wellbeing_score": readiness,
+        "readiness_score": overall_score_100,
         "discordance_analysis": (
-            "Your verbal logs and expressions are calm and focused, but your vitals show minor physical strain. A brief resting interval is recommended."
-            if hidden_strain else
-            "All your signals match up nicely. Your facial expression, voice, and vitals show steady composure."
+            "Your outward demeanor is composed and steady, but your body is carrying hidden fatigue from prolonged focus."
+            if discordance else
+            "All your health and emotional signals align nicely. Your facial cues, vocal tone, and vital signs show steady focus."
         )
     }
 
