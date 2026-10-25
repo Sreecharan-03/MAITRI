@@ -1,0 +1,18 @@
+/**
+ * MAITRI - Face Scan Module Stylesheet
+ * File: frontend/css/face-scan.css
+ */
+
+.face-viewfinder-overlay {
+  background: radial-gradient(circle at center, transparent 40%, rgba(11, 15, 25, 0.75) 100%);
+}
+
+.radar-sweep-effect {
+  animation: radar-sweep 2.5s linear infinite;
+}
+
+@keyframes radar-sweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
