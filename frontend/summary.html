@@ -189,17 +189,17 @@
           <div class="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Heart Rate</span>
             <div class="text-2xl font-bold font-mono text-white mt-1" id="vital-hr-text">78 <span class="text-xs text-slate-400 font-sans">BPM</span></div>
-            <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>Normal Resting</span>
+            <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5" id="vital-hr-status">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" id="vital-hr-dot"></span>
+              <span id="vital-hr-label">Normal Resting</span>
             </div>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-950/40 border border-slate-800">
             <span class="text-xs text-slate-400 font-medium">Blood Oxygen</span>
             <div class="text-2xl font-bold font-mono text-white mt-1" id="vital-spo2-text">97.0%</div>
-            <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>Optimal Tissue</span>
+            <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5" id="vital-spo2-status">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400" id="vital-spo2-dot"></span>
+              <span id="vital-spo2-label">Optimal Tissue</span>
             </div>
           </div>
         </div>
@@ -281,11 +281,11 @@
 
           <div class="space-y-1">
             <div class="flex justify-between text-xs">
-              <span class="text-slate-300">Other / Composure</span>
+              <span class="text-slate-300" id="plutchik-label-Other">Other / Strain</span>
               <span class="text-slate-400 font-mono" id="plutchik-val-Other">10%</span>
             </div>
             <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-              <div class="bg-slate-600 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Other" style="width: 10%"></div>
+              <div class="bg-amber-500 h-1.5 rounded-full transition-all duration-700" id="plutchik-bar-Other" style="width: 10%"></div>
             </div>
           </div>
         </div>
@@ -473,19 +473,135 @@
         document.getElementById('sensor-text-state').textContent = textEmo.toLowerCase().includes('fatigue') ? "Fatigue Noted" : textEmo;
         document.getElementById('sensor-text-detail').textContent = "Shift checklist completed";
       }
+      // Compute dynamic initial readiness from telemetry
+      function computeInitialReadiness() {
+        let hr = 78, spo2 = 97.0, stressScore = 0.20;
+        if (state.stress_result) {
+          stressScore = state.stress_result.stress_score !== undefined ? state.stress_result.stress_score : 0.20;
+          if (state.stress_result.details) {
+            hr = parseFloat(state.stress_result.details.hr_bpm || state.stress_result.details.hr || hr);
+            spo2 = parseFloat(state.stress_result.details.spo2_pct || state.stress_result.details.spo2_percent || spo2);
+          }
+        }
+        const sPct = stressScore * 100;
+        let score = 100 - (sPct * 0.45);
+        if (hr > 90) score -= Math.min(22, (hr - 90) * 0.35);
+        if (spo2 < 95) score -= Math.min(18, (95 - spo2) * 2.5);
+        if (state.voice_result && ['fear', 'anger', 'strained'].includes((state.voice_result.dominant_emotion || '').toLowerCase())) score -= 10;
+        if (state.face_result && ['sadness', 'fear', 'anger'].includes((state.face_result.dominant_emotion || '').toLowerCase())) score -= 10;
+        return Math.max(20, Math.min(98, Math.round(score)));
+      }
+
+      function renderReadinessDial(score) {
+        scoreText.textContent = score;
+        const circumference = 427;
+        const offset = circumference - (score / 100) * circumference;
+        scoreCircle.style.strokeDashoffset = offset;
+        if (score < 50) {
+          scoreCircle.className = "text-rose-500 transition-all duration-1000 ease-out";
+        } else if (score < 75) {
+          scoreCircle.className = "text-amber-400 transition-all duration-1000 ease-out";
+        } else {
+          scoreCircle.className = "text-cyan-400 transition-all duration-1000 ease-out";
+        }
+      }
+
+      // Initial dynamic dial render
+      const initialScore = computeInitialReadiness();
+      renderReadinessDial(initialScore);
+
+      // Dynamic Composure Calculation
+      let compScore = 86;
+      if (state.face_result) {
+        const fe = (state.face_result.dominant_emotion || "").toLowerCase();
+        if (['neutral', 'composed', 'happiness'].includes(fe)) compScore += 5;
+        else if (['sadness', 'fear', 'anger'].includes(fe)) compScore -= 28;
+      }
+      if (state.voice_result) {
+        const ve = (state.voice_result.dominant_emotion || "").toLowerCase();
+        const vp = state.voice_result.pitch_hz || 120;
+        if (ve === 'calm') compScore += 5;
+        else if (['fear', 'anger', 'strained'].includes(ve) || vp > 185) compScore -= 30;
+        else if (ve === 'sadness') compScore -= 18;
+      }
+      compScore = Math.max(15, Math.min(98, compScore));
+      document.getElementById('val-composure-pct').textContent = `${compScore}%`;
+      document.getElementById('bar-composure').style.width = `${compScore}%`;
+
+      // Dynamic Stress & Vitals Gauges
       if (state.stress_result) {
-        const stressScore = state.stress_result.stress_score || 0.06;
+        const stressScore = state.stress_result.stress_score !== undefined ? state.stress_result.stress_score : 0.06;
         const sPct = Math.round(stressScore * 100);
         document.getElementById('val-strain-pct').textContent = `${sPct}%`;
-        document.getElementById('bar-strain').style.width = `${Math.min(100, Math.max(5, sPct))}%`;
-        document.getElementById('sensor-stress-state').textContent = sPct > 40 ? "Elevated Load" : "Homeostasis";
-        document.getElementById('sensor-stress-detail').textContent = `Low stress load (${sPct}%), steady vitals`;
+        
+        const strainBar = document.getElementById('bar-strain');
+        const strainVal = document.getElementById('val-strain-pct');
+        strainBar.style.width = `${Math.min(100, Math.max(5, sPct))}%`;
+        if (sPct > 65) {
+          strainBar.className = "bg-rose-500 h-2 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(244,63,94,0.5)]";
+          strainVal.className = "text-rose-400 font-mono";
+        } else if (sPct > 35) {
+          strainBar.className = "bg-amber-400 h-2 rounded-full transition-all duration-700";
+          strainVal.className = "text-amber-400 font-mono";
+        } else {
+          strainBar.className = "bg-emerald-400 h-2 rounded-full transition-all duration-700";
+          strainVal.className = "text-emerald-400 font-mono";
+        }
+
+        document.getElementById('sensor-stress-state').textContent = sPct > 65 ? "Autonomic Strain" : (sPct > 35 ? "Elevated Load" : "Homeostasis");
+        document.getElementById('sensor-stress-detail').textContent = sPct > 65
+          ? `High autonomic strain (${sPct}%), active recovery needed`
+          : (sPct > 35 ? `Moderate workload (${sPct}%), fatigue noted` : `Low stress load (${sPct}%), steady vitals`);
 
         if (state.stress_result.details) {
-          const hr = state.stress_result.details.hr_bpm || 78;
-          const spo2 = state.stress_result.details.spo2_pct || 97.0;
-          document.getElementById('vital-hr-text').innerHTML = `${hr} <span class="text-xs text-slate-400 font-sans">BPM</span>`;
-          document.getElementById('vital-spo2-text').textContent = `${spo2}%`;
+          const hr = parseFloat(state.stress_result.details.hr_bpm || state.stress_result.details.hr || 78);
+          const spo2 = parseFloat(state.stress_result.details.spo2_pct || state.stress_result.details.spo2_percent || 97.0);
+          document.getElementById('vital-hr-text').innerHTML = `${Math.round(hr)} <span class="text-xs text-slate-400 font-sans">BPM</span>`;
+          document.getElementById('vital-spo2-text').textContent = `${spo2.toFixed(1)}%`;
+
+          // Update Heart Rate status badge & dot
+          const hrStatus = document.getElementById('vital-hr-status');
+          const hrDot = document.getElementById('vital-hr-dot');
+          const hrLabel = document.getElementById('vital-hr-label');
+          if (hrStatus && hrDot && hrLabel) {
+            if (hr > 115) {
+              hrLabel.textContent = "Tachycardia / High Strain";
+              hrStatus.className = "text-[11px] text-rose-400 mt-1 flex items-center gap-1.5 font-medium";
+              hrDot.className = "w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse";
+            } else if (hr > 90) {
+              hrLabel.textContent = "Elevated Heart Rate";
+              hrStatus.className = "text-[11px] text-amber-400 mt-1 flex items-center gap-1.5 font-medium";
+              hrDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+            } else if (hr < 58) {
+              hrLabel.textContent = "Bradycardia / Low";
+              hrStatus.className = "text-[11px] text-amber-400 mt-1 flex items-center gap-1.5 font-medium";
+              hrDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+            } else {
+              hrLabel.textContent = "Normal Resting";
+              hrStatus.className = "text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5 font-medium";
+              hrDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+            }
+          }
+
+          // Update SpO2 status badge & dot
+          const spo2Status = document.getElementById('vital-spo2-status');
+          const spo2Dot = document.getElementById('vital-spo2-dot');
+          const spo2Label = document.getElementById('vital-spo2-label');
+          if (spo2Status && spo2Dot && spo2Label) {
+            if (spo2 < 93.0) {
+              spo2Label.textContent = "Compromised Hypoxia";
+              spo2Status.className = "text-[11px] text-rose-400 mt-1 flex items-center gap-1.5 font-medium";
+              spo2Dot.className = "w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse";
+            } else if (spo2 < 96.0) {
+              spo2Label.textContent = "Mild Depletion";
+              spo2Status.className = "text-[11px] text-amber-400 mt-1 flex items-center gap-1.5 font-medium";
+              spo2Dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400";
+            } else {
+              spo2Label.textContent = "Optimal Tissue";
+              spo2Status.className = "text-[11px] text-emerald-400 mt-1 flex items-center gap-1.5 font-medium";
+              spo2Dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
+            }
+          }
         }
       }
 
@@ -510,12 +626,9 @@
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
 
-          // Update Readiness Score (circle circumference is 427 for r=68)
-          const rawScore = data.readiness_score || (data.overall_score ? Math.round(data.overall_score * 10) : 80);
-          scoreText.textContent = rawScore;
-          const circumference = 427;
-          const offset = circumference - (rawScore / 100) * circumference;
-          scoreCircle.style.strokeDashoffset = offset;
+          // Update Readiness Score
+          const rawScore = data.readiness_score || (data.overall_score ? Math.round(data.overall_score * 10) : computeInitialReadiness());
+          renderReadinessDial(rawScore);
 
           // Update Status & Plain English Headline
           if (data.simple_verdict) {
@@ -561,8 +674,7 @@
 
         } catch (err) {
           console.warn("Gemini synthesis notice:", err);
-          scoreText.textContent = "80";
-          scoreCircle.style.strokeDashoffset = "85";
+          renderReadinessDial(computeInitialReadiness());
         }
       }
 
@@ -582,7 +694,9 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               text_log: textLog,
-              wearable_features: physioVector
+              wearable_features: physioVector,
+              face_result: state.face_result,
+              voice_result: state.voice_result
             })
           });
 
@@ -600,18 +714,66 @@
             statusPillText.textContent = "All Signals Congruent • Fit For Duty";
           }
 
-          // Update Plutchik 8-Class bars if present
+          // Update Plutchik Affect bars dynamically
           if (data.fused_emotion_distribution) {
             const dist = data.fused_emotion_distribution;
-            ['Trust', 'Anticipation', 'Joy', 'Sadness'].forEach(emo => {
-              if (dist[emo] !== undefined) {
-                const pct = Math.round(dist[emo] * 100);
-                const valEl = document.getElementById(`plutchik-val-${emo}`);
-                const barEl = document.getElementById(`plutchik-bar-${emo}`);
-                if (valEl) valEl.textContent = `${pct}%`;
-                if (barEl) barEl.style.width = `${pct}%`;
+            const trustPct = Math.round((dist['Trust'] || 0) * 100);
+            const antPct = Math.round((dist['Anticipation'] || 0) * 100);
+            const joyPct = Math.round((dist['Joy'] || 0) * 100);
+            const sadPct = Math.round((dist['Sadness'] || 0) * 100);
+            const fearPct = Math.round(((dist['Fear'] || 0) + (dist['Anger'] || 0)) * 100);
+
+            const trustEl = document.getElementById('plutchik-val-Trust');
+            const trustBar = document.getElementById('plutchik-bar-Trust');
+            if (trustEl) trustEl.textContent = `${trustPct}%`;
+            if (trustBar) trustBar.style.width = `${trustPct}%`;
+
+            const antEl = document.getElementById('plutchik-val-Anticipation');
+            const antBar = document.getElementById('plutchik-bar-Anticipation');
+            if (antEl) antEl.textContent = `${antPct}%`;
+            if (antBar) antBar.style.width = `${antPct}%`;
+
+            const joyEl = document.getElementById('plutchik-val-Joy');
+            const joyBar = document.getElementById('plutchik-bar-Joy');
+            if (joyEl) joyEl.textContent = `${joyPct}%`;
+            if (joyBar) joyBar.style.width = `${joyPct}%`;
+
+            const sadEl = document.getElementById('plutchik-val-Sadness');
+            const sadBar = document.getElementById('plutchik-bar-Sadness');
+            if (sadEl) sadEl.textContent = `${sadPct}%`;
+            if (sadBar) sadBar.style.width = `${sadPct}%`;
+
+            const otherLabel = document.getElementById('plutchik-label-Other');
+            const otherVal = document.getElementById('plutchik-val-Other');
+            const otherBar = document.getElementById('plutchik-bar-Other');
+            if (otherVal && otherBar) {
+              if (fearPct > 20) {
+                if (otherLabel) otherLabel.textContent = "Autonomic Strain";
+                otherBar.className = "bg-rose-500 h-1.5 rounded-full transition-all duration-700";
+              } else {
+                if (otherLabel) otherLabel.textContent = "Other / Composure";
+                otherBar.className = "bg-slate-600 h-1.5 rounded-full transition-all duration-700";
               }
-            });
+              const displayOther = Math.max(5, Math.min(95, fearPct > 0 ? fearPct : (100 - (trustPct + antPct + joyPct + sadPct))));
+              otherVal.textContent = `${displayOther}%`;
+              otherBar.style.width = `${displayOther}%`;
+            }
+
+            // Update Affect Insight Box dynamically
+            const insightBox = document.getElementById('affect-insight-box');
+            if (insightBox) {
+              const curStrain = (state.stress_result && state.stress_result.stress_score) ? Math.round(state.stress_result.stress_score * 100) : 10;
+              if (fearPct > 25 || curStrain > 60 || hr > 115) {
+                insightBox.innerHTML = `⚠️ <span class="text-amber-400 font-medium">Insight:</span> Autonomic Strain &amp; Tension (${fearPct}%) are actively elevated. Cardiovascular rest window recommended.`;
+                insightBox.className = "p-3 rounded-2xl bg-rose-950/30 border border-rose-500/30 text-[11px] text-rose-200 leading-relaxed";
+              } else if (data.discordance_alert) {
+                insightBox.innerHTML = `⚠️ <span class="text-amber-400 font-medium">Insight:</span> Outward composure is masking internal strain (${curStrain}%). Short breather recommended.`;
+                insightBox.className = "p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-[11px] text-amber-200 leading-relaxed";
+              } else {
+                insightBox.innerHTML = `💡 <span class="text-white font-medium">Insight:</span> High Trust (${trustPct}%) and Anticipation (${antPct}%) dominate your state, pointing to high mission focus.`;
+                insightBox.className = "p-3 rounded-2xl bg-slate-950/40 border border-slate-800 text-[11px] text-slate-300 leading-relaxed";
+              }
+            }
           }
 
         } catch (err) {

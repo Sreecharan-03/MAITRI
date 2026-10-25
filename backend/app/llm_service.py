@@ -27,18 +27,6 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
     Generate flight surgeon briefing using Gemini LLM.
     Translates complex biometric & emotional sensor data into plain, empathetic, everyday English.
     """
-    # Normalize overall readiness score
-    raw_score = (
-        telemetry_data.get('overall_score')
-        or telemetry_data.get('readiness_score')
-        or telemetry_data.get('overall_wellbeing_score')
-        or 80
-    )
-    if isinstance(raw_score, (int, float)) and raw_score <= 10.0:
-        overall_score_100 = int(raw_score * 10)
-    else:
-        overall_score_100 = int(raw_score)
-
     # Face cues
     face = telemetry_data.get('face_result') or telemetry_data.get('face_data') or telemetry_data.get('face') or {}
     face_emo = face.get('dominant_emotion') or telemetry_data.get('predicted_emotion') or 'Composed'
@@ -58,9 +46,9 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
     # Wearable Vitals cues
     vitals = telemetry_data.get('stress_result') or telemetry_data.get('stress_data') or telemetry_data.get('vitals_data') or {}
     details = vitals.get('details') or {}
-    hr = details.get('hr_bpm') or telemetry_data.get('heart_rate') or 78
-    spo2 = details.get('spo2_pct') or telemetry_data.get('spo2') or 97.0
-    stress_val = vitals.get('stress_score') or (telemetry_data.get('component_indices') or {}).get('psi_physiological_stress') or 20
+    hr = float(details.get('hr_bpm') or telemetry_data.get('heart_rate') or 78.0)
+    spo2 = float(details.get('spo2_pct') or telemetry_data.get('spo2') or 97.0)
+    stress_val = vitals.get('stress_score') or (telemetry_data.get('component_indices') or {}).get('psi_physiological_stress') or 0.20
     if isinstance(stress_val, float) and stress_val <= 1.0:
         stress_pct = int(stress_val * 100)
     else:
@@ -73,14 +61,41 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
         or (stress_pct > 50 and voice_emo.lower() in ['calm', 'neutral'])
     )
 
+    # Dynamic Multimodal Readiness Score Calculation (0 to 100)
+    raw_score = (
+        telemetry_data.get('overall_score')
+        or telemetry_data.get('readiness_score')
+        or telemetry_data.get('overall_wellbeing_score')
+    )
+    if raw_score is not None and raw_score != 80:
+        if isinstance(raw_score, (int, float)) and raw_score <= 10.0:
+            overall_score_100 = int(raw_score * 10)
+        else:
+            overall_score_100 = int(raw_score)
+    else:
+        # Compute from actual multi-channel signals
+        stress_penalty = (stress_pct / 100.0) * 45.0
+        hr_penalty = max(0.0, (hr - 90.0) * 0.35) if hr > 90 else 0.0
+        spo2_penalty = max(0.0, (95.0 - spo2) * 2.5) if spo2 < 95.0 else 0.0
+        voice_penalty = 12.0 if voice_emo.lower() in ['fear', 'anger', 'strained'] else (
+            8.0 if voice_emo.lower() == 'sadness' or pitch > 180 else 2.0
+        )
+        face_penalty = 12.0 if face_emo.lower() in ['fatigue', 'sadness', 'fear', 'anger'] else (
+            5.0 if face_emo.lower() in ['tired', 'neutral'] else 1.0
+        )
+        text_penalty = 10.0 if ('fatigue' in str(text).lower() or text_emo.lower() in ['fatigue', 'sadness', 'fear', 'anger']) else 2.0
+
+        total_deduction = stress_penalty + hr_penalty + spo2_penalty + voice_penalty + face_penalty + text_penalty
+        overall_score_100 = int(round(max(20, min(98, 100 - total_deduction))))
+
     prompt = f"""
     Translate these astronaut telemetry results into plain, everyday human English:
     - Overall Readiness: {overall_score_100}/100
     - Voice Check: {voice_detail}
     - Face Check: {face_detail}
     - Journal Note: {journal_detail}
-    - Physical Vitals: Heart rate {hr} bpm, healthy oxygen ({spo2}%), relaxed baseline body vitals
-    - Discordance Flag: {discordance} (Keeping composure despite being physically tired)
+    - Physical Vitals: Heart rate {hr} bpm, oxygen {spo2}%, physiological strain {stress_pct}%
+    - Discordance Flag: {discordance} (Keeping composure despite elevated physiological load)
 
     Respond ONLY in valid JSON matching this exact structure:
     {{
@@ -104,27 +119,46 @@ def generate_flight_surgeon_report(telemetry_data: dict, api_key: Optional[str] 
         or os.getenv("GEMINI_API_KEY")
     )
 
-    # Human-centric, grounded fallbacks
-    simple_verdict = (
-        "Fit for duty • Mental energy running slightly low."
-        if discordance or stress_pct > 40 else
-        "Fit for duty • All systems steady and balanced."
-    )
-    plain_explanation = (
-        "You are doing a great job keeping steady and composed, and your heart and vitals are completely healthy. "
-        "However, your journal notes and facial cues show your brain and eyes are tired from long hours at the console. "
-        "A quick 15-minute breather will keep your focus sharp and your stamina strong."
-        if discordance or stress_pct > 40 else
-        "You look and sound composed, and your vital signs are completely normal and steady today. "
-        "Your body and mind are working in good harmony, and you are in great shape for your scheduled mission tasks. "
-        "Keeping a steady pace and staying hydrated will ensure your energy remains consistent."
-    )
-    actionable_tips = [
-        "Take a 15-minute screen break to rest your eyes.",
-        "Drink a full bottle of water and have an electrolyte snack.",
-        "Do 5 slow, deep breaths to help your body unwind.",
-        "Dim the workstation overhead lights for the rest of your shift."
-    ]
+    # Human-centric, grounded fallbacks tailored to actual strain
+    if stress_pct > 65 or hr > 115:
+        simple_verdict = "Elevated Autonomic Strain • Active Recovery Required"
+        plain_explanation = (
+            f"Your heart rate ({int(hr)} BPM) and physiological stress load ({stress_pct}%) indicate substantial autonomic strain today. "
+            "Even if you feel composed, your cardiovascular system is working overtime. "
+            "Please pause strenuous tasks, hydrate with electrolytes, and take a 20-minute rest window."
+        )
+        actionable_tips = [
+            "Take an immediate 20-minute quiet rest break in crew quarters.",
+            "Drink 500ml water with an electrolyte replenishment pack.",
+            "Perform 4-7-8 slow diaphragmatic breathing to lower heart rate.",
+            "Notify crew lead to postpone scheduled physical EVA tasks."
+        ]
+    elif discordance or stress_pct > 40:
+        simple_verdict = "Fit for duty • Mental energy running slightly low."
+        plain_explanation = (
+            "You are doing a great job keeping steady and composed, and your outward demeanour is solid. "
+            "However, your journal notes and physiological cues show your body is carrying hidden work fatigue. "
+            "A quick 15-minute breather will keep your focus sharp and your stamina strong."
+        )
+        actionable_tips = [
+            "Take a 15-minute screen break away from console displays.",
+            "Drink a full bottle of water and have a light energy snack.",
+            "Do 5 slow, deep breaths to help your body unwind.",
+            "Dim the workstation overhead lights for the rest of your shift."
+        ]
+    else:
+        simple_verdict = "Fit for duty • All systems steady and balanced."
+        plain_explanation = (
+            "You look and sound composed, and your vital signs are completely normal and steady today. "
+            "Your body and mind are working in good harmony, and you are in great shape for your scheduled mission tasks. "
+            "Keeping a steady pace and staying hydrated will ensure your energy remains consistent."
+        )
+        actionable_tips = [
+            "Continue with your normal planned activities and tasks.",
+            "Keep staying hydrated throughout the rest of your shift.",
+            "Take short routine 5-minute stretch breaks between task blocks.",
+            "Maintain steady lighting in your workstation area."
+        ]
 
     if active_key:
         try:

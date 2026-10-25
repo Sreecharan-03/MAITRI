@@ -57,6 +57,22 @@ def map_text_to_plutchik(scores: Dict[str, float]) -> Dict[str, float]:
     total = sum(p_map.values()) or 1.0
     return {k: round(v / total, 4) for k, v in p_map.items()}
 
+def map_stress_to_plutchik(stress_score: float) -> Dict[str, float]:
+    """Map continuous physiological stress index (WESAD LOSO) to 8 Plutchik axes."""
+    s = max(0.0, min(1.0, float(stress_score)))
+    p_map = {
+        'Fear': round(0.02 + 0.48 * s, 4),
+        'Anger': round(0.02 + 0.26 * s, 4),
+        'Sadness': round(0.04 + 0.14 * s, 4),
+        'Joy': round(max(0.01, 0.20 * (1.0 - s)), 4),
+        'Trust': round(max(0.02, 0.45 * (1.0 - s)), 4),
+        'Anticipation': round(max(0.02, 0.25 * (1.0 - s)), 4),
+        'Surprise': round(0.02 + 0.08 * s, 4),
+        'Disgust': round(0.02 + 0.06 * s, 4)
+    }
+    total = sum(p_map.values()) or 1.0
+    return {k: round(v / total, 4) for k, v in p_map.items()}
+
 def fuse_multimodal_streams(
     face_res: Dict[str, Any],
     voice_res: Dict[str, Any],
@@ -75,15 +91,18 @@ def fuse_multimodal_streams(
     face_scores = face_res.get('scores', {})
     voice_scores = voice_res.get('scores', {})
     text_scores = text_res.get('detected_8_classes', text_res.get('scores', {}))
+    stress_score = float(stress_res.get('stress_score', 0.20))
 
     p_face = map_face_to_plutchik(face_scores)
     p_voice = map_voice_to_plutchik(voice_scores)
     p_text = map_text_to_plutchik(text_scores)
+    p_physio = map_stress_to_plutchik(stress_score)
 
     modalities = {
         'face': [p_face[c] for c in PLUTCHIK_8],
         'speech': [p_voice[c] for c in PLUTCHIK_8],
-        'text': [p_text[c] for c in PLUTCHIK_8]
+        'text': [p_text[c] for c in PLUTCHIK_8],
+        'physio': [p_physio[c] for c in PLUTCHIK_8]
     }
 
     # 2. Compute Inverse-Predictive Entropy Weights (Certainty Gating)

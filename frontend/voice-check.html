@@ -261,12 +261,59 @@
       let audioStream = null;
       let mediaRecorder = null;
       let audioChunks = [];
+      let audioCtx = null;
+      let analyser = null;
+      let pitchReadings = [];
       const TOTAL_SECONDS = 15;
       let countdown = TOTAL_SECONDS;
       let countTimer = null;
 
       const recProgressContainer = document.getElementById('rec-progress-container');
       const recProgressBar = document.getElementById('rec-progress-bar');
+
+      function detectPitch(timeData, sampleRate) {
+        let size = timeData.length;
+        let rms = 0;
+        for (let i = 0; i < size; i++) {
+          let val = timeData[i];
+          rms += val * val;
+        }
+        rms = Math.sqrt(rms / size);
+        if (rms < 0.01) return null; // Silence
+
+        // Autocorrelation
+        let r1 = 0, r2 = size - 1, thres = 0.2;
+        for (let i = 0; i < size / 2; i++) {
+          if (Math.abs(timeData[i]) < thres) { r1 = i; break; }
+        }
+        for (let i = 1; i < size / 2; i++) {
+          if (Math.abs(timeData[size - i]) < thres) { r2 = size - i; break; }
+        }
+
+        let buf = timeData.slice(r1, r2);
+        let c = new Array(buf.length).fill(0);
+        for (let i = 0; i < buf.length; i++) {
+          for (let j = 0; j < buf.length - i; j++) {
+            c[i] = c[i] + buf[j] * buf[j + i];
+          }
+        }
+
+        let d = 0;
+        while (c[d] > c[d + 1]) d++;
+        let maxval = -1, maxpos = -1;
+        for (let i = d; i < buf.length; i++) {
+          if (c[i] > maxval) {
+            maxval = c[i];
+            maxpos = i;
+          }
+        }
+        let T0 = maxpos;
+        if (T0 > 0) {
+          let freq = sampleRate / T0;
+          if (freq >= 75 && freq <= 350) return freq;
+        }
+        return null;
+      }
 
       async function stopAndProcessRecording() {
         if (!isRecording) return;
@@ -277,6 +324,16 @@
         }
         if (audioStream) {
           audioStream.getTracks().forEach(t => t.stop());
+        }
+
+        // Calculate average detected pitch
+        let measuredPitch = null;
+        if (pitchReadings.length > 0) {
+          const sum = pitchReadings.reduce((a, b) => a + b, 0);
+          measuredPitch = Math.round((sum / pitchReadings.length) * 10) / 10;
+        }
+        if (audioCtx) {
+          try { await audioCtx.close(); } catch(e) {}
         }
 
         statusText.textContent = "Processing 15s Wav2Vec2 Acoustic Prosody...";
@@ -291,6 +348,9 @@
         try {
           const formData = new FormData();
           formData.append('audio', audioBlob, 'astronaut_voice_15s.webm');
+          if (measuredPitch) {
+            formData.append('measured_pitch', measuredPitch.toString());
+          }
           const res = await fetch(`${API_BASE}/api/v1/step2/voice`, {
             method: 'POST',
             body: formData
@@ -298,11 +358,11 @@
           const data = await res.json();
 
           document.getElementById('voice-dominant-label').textContent = (data.dominant_emotion || "Calm").toUpperCase();
-          document.getElementById('voice-pitch-label').textContent = `${data.pitch_hz || 118.2} Hz`;
+          document.getElementById('voice-pitch-label').textContent = `${data.pitch_hz || (measuredPitch || 118.2)} Hz`;
           document.getElementById('voice-conf-label').textContent = `${Math.round((data.confidence || 0.84) * 100)}%`;
 
           updateTelemetryState('voice_result', data);
-          statusText.textContent = "✓ 15s Voice Recording Synchronized";
+          statusText.textContent = `✓ 15s Voice Analysis Synchronized (${(data.dominant_emotion || "Calm").toUpperCase()} • ${data.pitch_hz || 118.2} Hz)`;
           statusText.className = "text-emerald-400 font-medium text-xs sm:text-sm mt-3";
 
         } catch (err) {
@@ -335,6 +395,7 @@
 
         isRecording = true;
         countdown = TOTAL_SECONDS;
+        pitchReadings = [];
 
         try {
           audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -342,6 +403,16 @@
           audioChunks = [];
           mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
           mediaRecorder.start();
+
+          // Setup Web Audio analyser
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+            const source = audioCtx.createMediaStreamSource(audioStream);
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 2048;
+            source.connect(analyser);
+          }
         } catch (err) {
           console.warn("Audio mic access error:", err);
         }
@@ -359,6 +430,14 @@
           countdown--;
           const pct = Math.round(((TOTAL_SECONDS - countdown) / TOTAL_SECONDS) * 100);
           if (recProgressBar) recProgressBar.style.width = `${pct}%`;
+
+          // Track live pitch from microphone
+          if (analyser && audioCtx) {
+            const timeBuf = new Float32Array(analyser.fftSize);
+            analyser.getFloatTimeDomainData(timeBuf);
+            const p = detectPitch(timeBuf, audioCtx.sampleRate);
+            if (p) pitchReadings.push(p);
+          }
 
           if (countdown > 0) {
             statusText.textContent = `Recording audio... (${countdown}s remaining • 15s minimum)`;

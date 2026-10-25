@@ -10,7 +10,7 @@ def run_tests():
 
     # 1. Health check
     print("\n[1/6] Checking Backend Health (/health)...")
-    with urllib.request.urlopen("http://localhost:8000/health") as r:
+    with urllib.request.urlopen("http://127.0.0.1:8000/health") as r:
         health = json.loads(r.read().decode())
         print("  Status:", health)
         assert health["status"] == "MAITRI Backend Online"
@@ -34,7 +34,7 @@ def run_tests():
     ).encode("utf-8") + face_bytes + f"\r\n--{boundary}--\r\n".encode("utf-8")
 
     req1 = urllib.request.Request(
-        "http://localhost:8000/api/v1/step1/face",
+        "http://127.0.0.1:8000/api/v1/step1/face",
         data=body,
         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}
     )
@@ -53,7 +53,7 @@ def run_tests():
     ).encode("utf-8") + b"dummy_audio_bytes" + f"\r\n--{boundary}--\r\n".encode("utf-8")
 
     req2 = urllib.request.Request(
-        "http://localhost:8000/api/v1/step2/voice",
+        "http://127.0.0.1:8000/api/v1/step2/voice",
         data=body2,
         headers={"Content-Type": f"multipart/form-data; boundary={boundary}"}
     )
@@ -65,7 +65,7 @@ def run_tests():
     # 4. Step 3: Text Sentiment Prediction
     print("\n[4/6] Testing Step 3 Text NLP Prediction (/api/v1/step3/text)...")
     req3 = urllib.request.Request(
-        "http://localhost:8000/api/v1/step3/text",
+        "http://127.0.0.1:8000/api/v1/step3/text",
         data=json.dumps({"text": "Completed solar array EVA. Slight shoulder fatigue, but mental clarity is solid."}).encode("utf-8"),
         headers={"Content-Type": "application/json"}
     )
@@ -77,7 +77,7 @@ def run_tests():
     # 5. Step 4: Wearable Biosensor Stress Prediction
     print("\n[5/6] Testing Step 4 Stress Model Prediction (/api/v1/step4/stress)...")
     req4 = urllib.request.Request(
-        "http://localhost:8000/api/v1/step4/stress",
+        "http://127.0.0.1:8000/api/v1/step4/stress",
         data=json.dumps({"heart_rate_bpm": 84.0, "spo2_percent": 97.2, "skin_temp_celsius": 36.6, "accelerometer_magnitude": 1.03}).encode("utf-8"),
         headers={"Content-Type": "application/json"}
     )
@@ -89,7 +89,7 @@ def run_tests():
     # 6. Step 5: Gemini LLM Synthesis
     print("\n[6/6] Testing Step 5 Gemini LLM Synthesis (/api/v1/step5/summary)...")
     req5 = urllib.request.Request(
-        "http://localhost:8000/api/v1/step5/summary",
+        "http://127.0.0.1:8000/api/v1/step5/summary",
         data=json.dumps({
             "astronaut_id": "ASTRO-01",
             "mission_day": 42,

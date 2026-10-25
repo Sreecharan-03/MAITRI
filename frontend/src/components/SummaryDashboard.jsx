@@ -18,29 +18,44 @@ import {
 
 export default function SummaryDashboard({ reportData, onRestart }) {
   // Fallback data when props not fully provided
+  // Calculate dynamic readiness fallback if not provided
+  const hrFallback = reportData?.heartRate || reportData?.heart_rate || (reportData?.stress_result?.details?.hr_bpm) || 78;
+  const spo2Fallback = reportData?.spO2 || reportData?.spo2 || (reportData?.stress_result?.details?.spo2_pct) || 97.0;
+  const strainFallback = reportData?.internalStrain || (reportData?.stress_result?.stress_score !== undefined ? Math.round(reportData.stress_result.stress_score * 100) : 6);
+  
+  const computedFallbackScore = Math.max(20, Math.min(98, Math.round(100 - (strainFallback * 0.45) - (hrFallback > 90 ? (hrFallback - 90) * 0.35 : 0))));
+
   const report = {
-    readinessScore: reportData?.readiness_score || reportData?.readinessScore || (reportData?.overall_score ? Math.round(reportData.overall_score * 10) : 80),
+    readinessScore: reportData?.readiness_score || reportData?.readinessScore || (reportData?.overall_score ? Math.round(reportData.overall_score * 10) : computedFallbackScore),
     statusTitle: reportData?.simple_verdict || reportData?.status || "High focus, but your body is carrying hidden fatigue.",
     statusDesc: reportData?.plain_explanation || reportData?.detailed_assessment || "Physically you are in a great state and your vitals are steady. Your voice and face show composure, but your journal notes indicate that extended tasks are beginning to cause mental wear. A quick 15-minute break will reset your focus.",
     isDiscordant: reportData?.isDiscordant || reportData?.discordance_alert || false,
     csiScore: reportData?.csiScore || 0.142,
-    heartRate: reportData?.heartRate || reportData?.heart_rate || 78,
-    spO2: reportData?.spO2 || reportData?.spo2 || 97.0,
+    heartRate: hrFallback,
+    spO2: spo2Fallback,
     expressedComposure: reportData?.expressedComposure || 86,
-    internalStrain: reportData?.internalStrain || 6,
+    internalStrain: strainFallback,
     sensors: reportData?.sensors || [
       { name: "Face Scan", state: "Composed", detail: "Mild eye fatigue", icon: Smile, color: "text-emerald-400", border: "border-emerald-500/30" },
       { name: "Voice Check", state: "Calm / Steady", detail: "118.2 Hz pitch", icon: Mic, color: "text-cyan-400", border: "border-cyan-500/30" },
       { name: "Daily Journal", state: "Fatigue Noted", detail: "Workload pressure", icon: BookOpen, color: "text-amber-400", border: "border-amber-500/30" },
-      { name: "Body Vitals", state: "Homeostasis", detail: "Low stress (6%)", icon: Activity, color: "text-emerald-400", border: "border-emerald-500/30" },
+      { name: "Body Vitals", state: strainFallback > 60 ? "Autonomic Strain" : "Homeostasis", detail: `${strainFallback}% stress load`, icon: Activity, color: strainFallback > 60 ? "text-rose-400" : "text-emerald-400", border: strainFallback > 60 ? "border-rose-500/30" : "border-emerald-500/30" },
     ],
-    emotions: reportData?.emotions || [
-      { label: "Trust", val: 63, color: "bg-cyan-500" },
-      { label: "Anticipation", val: 17, color: "bg-sky-500" },
-      { label: "Joy", val: 5, color: "bg-emerald-500" },
-      { label: "Sadness", val: 5, color: "bg-indigo-500" },
-      { label: "Other", val: 10, color: "bg-slate-600" },
-    ],
+    emotions: reportData?.emotions || (
+      reportData?.fused_emotion_distribution ? [
+        { label: "Trust", val: Math.round((reportData.fused_emotion_distribution.Trust || 0.48) * 100), color: "bg-cyan-500" },
+        { label: "Anticipation", val: Math.round((reportData.fused_emotion_distribution.Anticipation || 0.16) * 100), color: "bg-sky-500" },
+        { label: "Joy", val: Math.round((reportData.fused_emotion_distribution.Joy || 0.05) * 100), color: "bg-emerald-500" },
+        { label: "Sadness", val: Math.round((reportData.fused_emotion_distribution.Sadness || 0.05) * 100), color: "bg-indigo-500" },
+        { label: strainFallback > 50 ? "Autonomic Strain" : "Other / Composure", val: Math.max(5, Math.round(((reportData.fused_emotion_distribution.Fear || 0) + (reportData.fused_emotion_distribution.Anger || 0)) * 100) || 10), color: strainFallback > 50 ? "bg-rose-500" : "bg-slate-600" }
+      ] : [
+        { label: "Trust", val: strainFallback > 60 ? 25 : 63, color: "bg-cyan-500" },
+        { label: "Anticipation", val: strainFallback > 60 ? 15 : 17, color: "bg-sky-500" },
+        { label: "Joy", val: strainFallback > 60 ? 4 : 5, color: "bg-emerald-500" },
+        { label: "Sadness", val: strainFallback > 60 ? 12 : 5, color: "bg-indigo-500" },
+        { label: strainFallback > 50 ? "Autonomic Strain" : "Other / Composure", val: strainFallback > 50 ? Math.min(85, Math.round(strainFallback * 0.4)) : 10, color: strainFallback > 50 ? "bg-rose-500" : "bg-slate-600" },
+      ]
+    ),
     recommendations: (reportData?.actionable_tips || reportData?.recommendations || [
       "Take a 15-minute screen break to rest your eyes.",
       "Drink a full bottle of water and have an electrolyte snack.",
@@ -127,15 +142,15 @@ export default function SummaryDashboard({ reportData, onRestart }) {
               <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800">
                 <span className="text-xs text-slate-400 font-medium">Heart Rate</span>
                 <div className="text-2xl font-bold font-mono text-white mt-1">{report.heartRate} <span className="text-xs text-slate-400 font-sans">BPM</span></div>
-                <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-                  <span>●</span> Normal Resting
+                <div className={`text-[11px] mt-1 flex items-center gap-1 font-medium ${report.heartRate > 115 ? 'text-rose-400' : (report.heartRate > 90 ? 'text-amber-400' : 'text-emerald-400')}`}>
+                  <span className={report.heartRate > 115 ? 'animate-pulse' : ''}>●</span> {report.heartRate > 115 ? 'Tachycardia / High Strain' : (report.heartRate > 90 ? 'Elevated Heart Rate' : (report.heartRate < 58 ? 'Bradycardia / Low' : 'Normal Resting'))}
                 </div>
               </div>
               <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800">
                 <span className="text-xs text-slate-400 font-medium">Blood Oxygen</span>
                 <div className="text-2xl font-bold font-mono text-white mt-1">{report.spO2}%</div>
-                <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-                  <span>●</span> Optimal Tissue
+                <div className={`text-[11px] mt-1 flex items-center gap-1 font-medium ${report.spO2 < 93.0 ? 'text-rose-400' : (report.spO2 < 96.0 ? 'text-amber-400' : 'text-emerald-400')}`}>
+                  <span className={report.spO2 < 93.0 ? 'animate-pulse' : ''}>●</span> {report.spO2 < 93.0 ? 'Compromised Hypoxia' : (report.spO2 < 96.0 ? 'Mild Depletion' : 'Optimal Tissue')}
                 </div>
               </div>
             </div>
@@ -152,10 +167,10 @@ export default function SummaryDashboard({ reportData, onRestart }) {
 
               <div className="flex justify-between text-xs font-medium">
                 <span className="text-slate-400">Internal Stress Load</span>
-                <span className="text-amber-400 font-mono">{report.internalStrain}%</span>
+                <span className={`font-mono ${report.internalStrain > 60 ? 'text-rose-400' : (report.internalStrain > 35 ? 'text-amber-400' : 'text-emerald-400')}`}>{report.internalStrain}%</span>
               </div>
               <div className="w-full bg-slate-800 rounded-full h-2">
-                <div className="bg-amber-400 h-2 rounded-full" style={{ width: `${report.internalStrain}%` }} />
+                <div className={`${report.internalStrain > 60 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : (report.internalStrain > 35 ? 'bg-amber-400' : 'bg-emerald-400')} h-2 rounded-full`} style={{ width: `${Math.min(100, Math.max(5, report.internalStrain))}%` }} />
               </div>
             </div>
           </div>
@@ -183,8 +198,14 @@ export default function SummaryDashboard({ reportData, onRestart }) {
               ))}
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800 text-[11px] text-slate-400 leading-relaxed">
-              💡 <span className="text-slate-200 font-medium">Insight:</span> High Trust and Anticipation dominate your state, pointing to high mission focus.
+            <div className={`p-3 rounded-2xl border text-[11px] leading-relaxed ${report.internalStrain > 60 || report.heartRate > 115 ? 'bg-rose-950/30 border-rose-500/30 text-rose-200' : (report.isDiscordant ? 'bg-amber-950/30 border-amber-500/30 text-amber-200' : 'bg-slate-950/40 border-slate-800 text-slate-300')}`}>
+              {report.internalStrain > 60 || report.heartRate > 115 ? (
+                <>⚠️ <span className="text-amber-400 font-medium">Insight:</span> Autonomic Strain & Tension ({report.internalStrain}%) are actively elevated. Cardiovascular rest window recommended.</>
+              ) : report.isDiscordant ? (
+                <>⚠️ <span className="text-amber-400 font-medium">Insight:</span> Outward composure is masking internal strain ({report.internalStrain}%). Short breather recommended.</>
+              ) : (
+                <>💡 <span className="text-white font-medium">Insight:</span> High Trust and Anticipation dominate your state, pointing to high mission focus.</>
+              )}
             </div>
           </div>
 

@@ -62,15 +62,33 @@ async def predict_multimodal(request: Request):
         else:
             try:
                 body = await request.json()
-                text_input = body.get("text") or body.get("text_log") or text_input
-                hr = float(body.get("heart_rate_bpm") or hr)
-                spo2 = float(body.get("spo2_percent") or spo2)
-                temp = float(body.get("skin_temp_celsius") or temp)
-                features_13d = body.get("features_13d")
-                face_res = body.get("face_result")
-                voice_res = body.get("voice_result")
-            except Exception:
-                pass
+                text_input = str(body.get("text") or body.get("text_log") or body.get("journal_text") or text_input)
+                
+                raw_wf = body.get("wearable_features") or body.get("features_13d")
+                if raw_wf:
+                    if isinstance(raw_wf, list) and len(raw_wf) == 13:
+                        features_13d = [float(x) for x in raw_wf]
+                        hr = features_13d[0]
+                        temp = features_13d[10]
+                
+                hr_cand = body.get("heart_rate_bpm") or body.get("heart_rate") or body.get("heartRate")
+                if hr_cand is not None:
+                    hr = float(hr_cand)
+                
+                spo2_cand = body.get("spo2_percent") or body.get("spo2")
+                if spo2_cand is not None:
+                    spo2 = float(spo2_cand)
+                    
+                temp_cand = body.get("skin_temp_celsius") or body.get("skin_temp") or body.get("temp")
+                if temp_cand is not None:
+                    temp = float(temp_cand)
+
+                if body.get("face_result"):
+                    face_res = body.get("face_result")
+                if body.get("voice_result"):
+                    voice_res = body.get("voice_result")
+            except Exception as parse_err:
+                print(f"[Multimodal API] Warning parsing request body: {parse_err}")
 
         # 1. Text Stream (PAC-Net / ModernBERT)
         text_res = await predict_text_emotion(text_input)

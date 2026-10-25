@@ -228,7 +228,19 @@
           body: JSON.stringify({ text: text || "Nominal astronaut shift." })
         }).then(r => r.json()).then(data => {
           toneBadge.textContent = (data.dominant_emotion || "Reflective").replace('_', ' ').toUpperCase();
-          document.getElementById('nlp-conf-badge').textContent = `${Math.round((data.confidence || 0.75) * 100)}%`;
+          const confEl = document.getElementById('nlp-conf-badge');
+          if (confEl) confEl.textContent = `${Math.round((data.confidence || 0.75) * 100)}%`;
+          const resEl = document.getElementById('nlp-resilience-badge');
+          if (resEl) {
+            if (['fatigue', 'fear', 'sadness', 'anger'].includes(data.dominant_emotion)) {
+              resEl.textContent = "Workload Strain";
+              resEl.className = "text-amber-400 font-semibold";
+            } else {
+              resEl.textContent = "High";
+              resEl.className = "text-emerald-400 font-semibold";
+            }
+          }
+          data.text = text;
           updateTelemetryState('text_result', data);
         }).catch(e => console.warn("NLP API err:", e));
       }
