@@ -28,7 +28,7 @@ function resolveApiBase() {
         // Running on Vercel or cloud domain:
         // Use relative path by default so Vercel rewrites in vercel.json proxy directly to Render,
         // or fallback to preconfigured default Render backend.
-        var fallbackCloud = window.__DEFAULT_RENDER_URL__ || '';
+        var fallbackCloud = window.__DEFAULT_RENDER_URL__ || 'https://maitri-backend-lona.onrender.com';
         return fallbackCloud.replace(/\/+$/, '');
     }
 
@@ -308,7 +308,7 @@ window.checkBackendHealth = checkBackendHealth;
                     <label style="display: block; font-size: 11px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; color: #cbd5e1; margin-bottom: 6px; letter-spacing: 0.05em;">
                         Backend API URL (Render / Local):
                     </label>
-                    <input id="maitri-gw-input" type="text" placeholder="https://maitri-backend.onrender.com"
+                    <input id="maitri-gw-input" type="text" placeholder="https://maitri-backend-lona.onrender.com"
                         style="width: 100%; box-sizing: border-box; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 8px; padding: 10px 12px; color: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin-bottom: 14px; outline: none;">
 
                     <div id="maitri-gw-health-report" style="font-size: 12px; font-family: 'JetBrains Mono', monospace; background: rgba(15, 23, 42, 0.5); border: 1px solid #1e293b; border-radius: 8px; padding: 10px; margin-bottom: 16px; color: #94a3b8;">
