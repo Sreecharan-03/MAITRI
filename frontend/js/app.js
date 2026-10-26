@@ -69,7 +69,7 @@ async function initHabitatLink() {
         const res = await fetch(`${API_BASE}/health`);
         const data = await res.json();
         if (data.status) {
-            statusEl.textContent = "ONLINE (DAN + GEMINI)";
+            statusEl.textContent = "ONLINE (NAD-NET + GEMINI)";
             statusEl.className = "val green";
         }
     } catch (e) {
@@ -236,7 +236,7 @@ async function finish10SecondFocusScan() {
     const reticle = document.getElementById('targetReticle');
 
     countdownSec.textContent = "ANALYZING...";
-    reticleText.textContent = "TRANSMITTING 10s TELEMETRY TO DAN INFERENCE ENGINE...";
+    reticleText.textContent = "TRANSMITTING 10s TELEMETRY TO SWINV2 NAD-NET INFERENCE ENGINE...";
 
     // Stop recorder
     if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {

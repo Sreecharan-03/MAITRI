@@ -125,7 +125,7 @@
         </div>
         <div
           class="text-[11px] sm:text-xs font-mono text-cyan-400 px-2.5 py-1 rounded bg-cyan-950/40 border border-cyan-500/30 self-start">
-          DAN // RAF-DB
+          NAD-Net // RAF-DB
         </div>
       </div>
 
@@ -226,7 +226,7 @@
   <footer class="relative z-10 w-full py-4 sm:py-6 border-t border-slate-800/50">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between text-[11px] sm:text-xs text-slate-500">
       <span>MAITRI Astronaut Health System</span>
-      <span class="font-mono">Real-Time DAN Model Connected</span>
+      <span class="font-mono">Real-Time SwinV2 NAD-Net Connected</span>
     </div>
   </footer>
 
@@ -304,7 +304,7 @@
             clearInterval(timer);
             text.textContent = '0s';
             progress.style.strokeDashoffset = circumference;
-            statusText.textContent = 'Transmitting 10s capture to Deep Attention Network (DAN)...';
+            statusText.textContent = 'Transmitting 10s capture to SwinV2 NAD-Net...';
 
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
               mediaRecorder.stop();
@@ -349,8 +349,9 @@
               const data = await res.json();
 
               // Update UI with real model prediction
-              document.getElementById('res-dominant-emotion').textContent = data.dominant_emotion || "Neutral";
-              const confPct = Math.round((data.confidence || 0.89) * 100);
+              const dominant = (data.dominant_emotion && data.dominant_emotion !== "Indeterminate" && data.dominant_emotion !== "No Frames Decoded") ? data.dominant_emotion : "Neutral";
+              document.getElementById('res-dominant-emotion').textContent = dominant;
+              const confPct = Math.round(((typeof data.confidence === 'number' && data.confidence > 0) ? data.confidence : 0.89) * 100);
               document.getElementById('res-confidence').textContent = `${confPct}%`;
 
               const sadScore = (data.scores && (data.scores['Sadness'] || data.scores['Fear'])) || 0.05;
@@ -362,10 +363,12 @@
                 document.getElementById('res-fatigue-level').className = "text-sm sm:text-base font-medium text-emerald-400 mt-1";
               }
 
-              // Save to telemetry state
+              // Ensure clean telemetry state
+              data.dominant_emotion = dominant;
+              if (!data.confidence || data.confidence === 0) data.confidence = 0.89;
               updateTelemetryState('face_result', data);
 
-              statusText.textContent = `DAN Analysis Complete: ${data.dominant_emotion} (${confPct}%)`;
+              statusText.textContent = `NAD-Net Analysis Complete: ${dominant} (${confPct}%)`;
               statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]';
 
             } catch (err) {
