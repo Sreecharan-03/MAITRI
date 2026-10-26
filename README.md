@@ -4,6 +4,9 @@
 
 **Autonomous Affective Computing, Autonomic Stress Telemetry, and Covert Emotional Discordance Detection in Extreme Environments**
 
+[![Live Demo](https://img.shields.io/badge/Live%20Cockpit-maitri--three.vercel.app-00dfa2?style=flat-square&logo=vercel)](https://maitri-three.vercel.app/)
+[![Backend API](https://img.shields.io/badge/Render%20Cloud-maitri--backend--lona-46E3B7?style=flat-square&logo=render)](https://maitri-backend-lona.onrender.com/health)
+[![API Docs](https://img.shields.io/badge/API%20Docs-Swagger%20UI-85EA2D?style=flat-square&logo=swagger)](https://maitri-backend-lona.onrender.com/docs)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=flat-square&logo=pytorch)](https://pytorch.org)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-Transformers-FFD21E?style=flat-square&logo=huggingface)](https://huggingface.co)
@@ -12,14 +15,25 @@
 [![Wav2Vec2](https://img.shields.io/badge/Audio-Wav2Vec2--Base-purple?style=flat-square)](https://huggingface.co/facebook/wav2vec2-base)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 
+[🚀 Live Flight Cockpit](https://maitri-three.vercel.app/) •
+[🛰️ Cloud API Docs](https://maitri-backend-lona.onrender.com/docs) •
 [Architecture](#2-multi-channel-architectures--mathematical-formulation) •
 [Benchmarks](#3-empirical-benchmarks--validation-results) •
-[Flight Cockpit](#4-mission-control-flight-ops-cockpit) •
-[Quickstart](#5-installation--quickstart-guide) •
-[API Specification](#6-telemetry-api-specification) •
-[Citation](#9-citation--academic-attribution)
+[Cockpit Subsystems](#4-mission-control-flight-ops-cockpit) •
+[Cloud Deployment](#5-live-production-deployment-architecture) •
+[Quickstart](#6-installation--quickstart-guide) •
+[API Specification](#7-telemetry-api-specification) •
+[Citation](#10-citation--academic-attribution)
 
 </div>
+
+> [!TIP]
+> ### 🚀 Live Production Deployment Online
+> - **Mission Control Cockpit (Frontend):** **[https://maitri-three.vercel.app/](https://maitri-three.vercel.app/)**
+> - **Inference Cloud Microservice (Render):** **[https://maitri-backend-lona.onrender.com](https://maitri-backend-lona.onrender.com)**
+> - **System Health & Model Integrity:** **[https://maitri-backend-lona.onrender.com/health](https://maitri-backend-lona.onrender.com/health)**
+> - **Interactive OpenAPI / Swagger Documentation:** **[https://maitri-backend-lona.onrender.com/docs](https://maitri-backend-lona.onrender.com/docs)**
+
 
 ---
 
@@ -198,20 +212,62 @@ All unimodal channels and the multimodal fusion pipeline were trained and valida
 
 ## 4. Mission Control Flight-Ops Cockpit
 
-MAITRI provides an interface styled with a deep-spaceflight dark theme (`#02040A`), built with native responsive CSS, SVG dials, and real-time JavaScript telemetry bridges.
+MAITRI provides an aerospace telemetry interface styled with a deep-spaceflight dark theme (`#02040A`), built with responsive CSS, SVG bio-dials, animated neural visualizers, and real-time JavaScript telemetry bridges.
 
-| Dashboard Subsystem | Route | Core Functionality |
-| :--- | :--- | :--- |
-| **Mission Landing Cockpit** | `/dashboard/index.html` | System overview, health status, telemetry link integrity, and direct workflow launcher. |
-| **Step 1: Facial Micro-Scan** | `/dashboard/face-scan.html` | Live WebRTC/Webcam camera feed, 10-second optical scan reticle, RAF-DB classification, and FSI display. |
-| **Step 2: Acoustic Voice Check** | `/dashboard/voice-check.html` | In-browser MediaRecorder audio stream, waveform feedback, Wav2Vec 2.0 classification, and pitch ($F_0$) readout. |
-| **Step 3: Daily Log Analysis** | `/dashboard/daily-log.html` | Astronaut journal textarea, debounced ModernBERT inference, TFC tension-flow score, and primary affect chips. |
-| **Step 4: Wearable Biosensors** | `/dashboard/health-vitals.html` | Real-time sliders for Heart Rate, HRV, EDA, Sweat Spikes, and Skin Temperature with dynamic $P(\text{stress})$ gauge. |
-| **Step 5: Executive Briefing** | `/dashboard/summary.html` | **Mission Readiness circular dial (0–100), Plutchik 8-class affect vector, entropy weights breakdown, CSI discordance alert, and Gemini Flight Surgeon clinical brief.** |
+| Subsystem | Live Production URL (Vercel) | Local Route | Core Telemetry & Subsystem Functionality |
+| :--- | :--- | :--- | :--- |
+| **Mission Landing Cockpit** | [maitri-three.vercel.app](https://maitri-three.vercel.app/) | `/dashboard/index.html` | Real-time system status, live cloud telemetry link health, neural module status, and direct workflow launcher. |
+| **Step 1: Facial Micro-Scan** | [`/face-scan.html`](https://maitri-three.vercel.app/face-scan.html) | `/dashboard/face-scan.html` | Live WebRTC/Webcam optical stream, 10-second scan reticle, SwinV2 NAD-Net facial classification, and FSI readout. |
+| **Step 2: Acoustic Voice Check** | [`/voice-check.html`](https://maitri-three.vercel.app/voice-check.html) | `/dashboard/voice-check.html` | In-browser MediaRecorder audio buffer, real-time waveform visualizer, Wav2Vec 2.0 + PAN prosody, and pitch ($F_0$) tracking. |
+| **Step 3: Daily Log Analysis** | [`/daily-log.html`](https://maitri-three.vercel.app/daily-log.html) | `/dashboard/daily-log.html` | Astronaut journal textarea, debounced ModernBERT PAC-Net inference, TFC tension conflict metric, and emotion chips. |
+| **Step 4: Wearable Biosensors** | [`/health-vitals.html`](https://maitri-three.vercel.app/health-vitals.html) | `/dashboard/health-vitals.html` | Real-time sliders for Heart Rate, HRV, EDA, Sweat Spikes, and Skin Temperature with dynamic $P(\text{stress})$ gauge. |
+| **Step 5: Executive Briefing** | [`/summary.html`](https://maitri-three.vercel.app/summary.html) | `/dashboard/summary.html` | **Mission Readiness circular gauge (0–100), Plutchik 8-class affect vector, entropy weights breakdown, CSI discordance alert, and Gemini Flight Surgeon clinical brief.** |
 
 ---
 
-## 5. Installation & Quickstart Guide
+## 5. Live Production Deployment Architecture
+
+MAITRI is globally accessible via a high-performance decoupled cloud architecture:
+
+```
+  ┌──────────────────────────────────────────────────────────────────┐
+  │                   ASTRONAUT & CREW COCKPIT                       │
+  │               https://maitri-three.vercel.app/                   │
+  └───────────────┬──────────────────────────────────┬───────────────┘
+                  │                                  │
+          Global Edge Assets                 Telemetry & Inference
+          (HTML, CSS, JS, Assets)            (/api/* & /health rewrites)
+                  │                                  │
+                  ▼                                  ▼
+      ┌───────────────────────┐          ┌───────────────────────┐
+      │   Vercel Edge CDN     │          │   Render Cloud Host   │
+      │   - Multi-page App    │─────────►│ - FastAPI (Python 3.11│
+      │   - vercel.json proxy │          │ - PyTorch & HuggingF. │
+      │   - Zero-delay cache  │          │ - Status: /health     │
+      └───────────────────────┘          └───────────┬───────────┘
+                                                     │
+                                                     ▼
+                                         ┌───────────────────────┐
+                                         │  Google Gemini Engine │
+                                         │  - AI Flight Surgeon  │
+                                         │  - Countermeasures    │
+                                         └───────────────────────┘
+```
+
+### Production Links & Endpoints
+- 🚀 **Mission Cockpit UI:** [https://maitri-three.vercel.app/](https://maitri-three.vercel.app/)
+- ⚡ **Backend Cloud Microservice:** [https://maitri-backend-lona.onrender.com](https://maitri-backend-lona.onrender.com)
+- 🩺 **Cloud Telemetry Health Check:** [https://maitri-backend-lona.onrender.com/health](https://maitri-backend-lona.onrender.com/health)
+- 📖 **Interactive OpenAPI / Swagger Docs:** [https://maitri-backend-lona.onrender.com/docs](https://maitri-backend-lona.onrender.com/docs)
+
+### Deployment Configuration Highlights
+- **Vercel Reverse Proxy (`vercel.json`):** Configures edge rewrites directing all `/api/:path*` and `/health` requests to `https://maitri-backend-lona.onrender.com`. This circumvents cross-origin restrictions, handles pre-flight requests gracefully, and delivers instant UI page loads globally.
+- **Render Service Blueprint (`render.yaml`):** Manages automated containerized builds with Python 3.11, pulling model checkpoints and serving the asynchronous FastAPI application over Uvicorn.
+- **Unified Telemetry Client (`maitri-bridge.js`):** Intelligently detects whether the client is in a local development environment (`localhost:8000`) or cloud production (`maitri-three.vercel.app`), auto-routes requests, and supports dynamic backend re-targeting via `window.setMaitriBackendUrl()`.
+
+---
+
+## 6. Installation & Quickstart Guide
 
 ### Prerequisites
 - **Operating System:** Linux, macOS, or Windows 10/11
@@ -314,9 +370,9 @@ http://localhost:8000/dashboard/
 
 ---
 
-## 6. Telemetry API Specification
+## 7. Telemetry API Specification
 
-All endpoints are hosted locally under `/api/v1/` and serve both JSON and `multipart/form-data` schemas.
+All endpoints are hosted locally under `/api/v1/` (or via the live cloud endpoint `https://maitri-backend-lona.onrender.com/api/v1/`) and serve both JSON and `multipart/form-data` schemas.
 
 ### 1. Multimodal End-to-End Prediction
 `POST /api/v1/predict_multimodal`
@@ -376,7 +432,7 @@ Fuses text transcript logs and 13-dimensional wearable telemetry arrays into ent
 
 ---
 
-## 7. Automated Testing Suites
+## 8. Automated Testing Suites
 
 MAITRI provides two rigorous automated testing scripts inside `backend/`:
 
@@ -425,10 +481,15 @@ python test_e2e_frontend_api.py
 
 ---
 
-## 8. Repository Layout
+## 9. Repository Layout
 
 ```plaintext
 MAITRI/
+├── .gitignore                          # Git tracking exclusions
+├── README.md                           # Comprehensive documentation & scientific specification
+├── render.yaml                         # Render cloud infrastructure blueprint (Python 3.11 runtime)
+├── vercel.json                         # Vercel edge reverse-proxy & routing rules
+│
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                     # FastAPI application setup & static frontend mounting
@@ -455,6 +516,7 @@ MAITRI/
 │   │   ├── Speech/MAITRI_Speech_Channel_Bundle/ # maitri_pan_best_model.pt & metadata
 │   │   ├── Text/pacnet_extracted/      # pacnet_modernbert_best.pth & tokenizers
 │   │   └── Physiological/MAITRI_Physiological_Channel_Bundle/ # *.pkl models, scaler & baseline
+│   ├── build.sh                        # Render automated cloud build script
 │   ├── download_models.py              # Automated model weight downloader using gdown
 │   ├── verify_models.py                # Multi-model architecture & memory verification script
 │   ├── test_pipeline.py                # Offline pipeline forward pass validation
@@ -469,14 +531,17 @@ MAITRI/
     ├── daily-log.html                  # Subsystem 3: Daily text log UI (sentiment chip)
     ├── health-vitals.html              # Subsystem 4: Wearable vitals interactive sliders UI
     ├── summary.html                    # Subsystem 5: Executive summary, CSI gauge & radar UI
-    ├── maitri-bridge.js                # Universal async REST client communicating with :8000
+    ├── maitri-bridge.js                # Universal async REST client (Vercel & Render auto-resolution)
+    ├── vite.config.js                  # Multi-page build & edge deployment bundler
+    ├── package.json                    # Frontend build scripts & dependencies
+    ├── vercel.json                     # Frontend-specific edge proxy rules
     ├── assets/                         # Official emblems, logos, and space wallpapers
     └── css/                            # Custom spaceflight dark theme style sheets
 ```
 
 ---
 
-## 9. Citation & Academic Attribution
+## 10. Citation & Academic Attribution
 
 If you utilize the MAITRI framework, NAD-Net, PAN, PAC-Net, or the Composite Suppression Index (CSI) in your research, please cite our work:
 
@@ -493,7 +558,7 @@ If you utilize the MAITRI framework, NAD-Net, PAN, PAC-Net, or the Composite Sup
 
 ---
 
-## 10. License & Ethical AI Usage
+## 11. License & Ethical AI Usage
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
