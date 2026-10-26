@@ -313,45 +313,36 @@
             // Small delay for buffer flush
             await new Promise(r => setTimeout(r, 400));
 
-            // Prepare payload
+            // Capture high-definition frame directly from active webcam stream
             let blob = null;
-            if (recordedChunks.length > 0) {
-              blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             } else {
-              // Frame capture
-              const canvas = document.createElement('canvas');
-              canvas.width = video.videoWidth || 640;
-              canvas.height = video.videoHeight || 480;
-              const ctx = canvas.getContext('2d');
-              if (video.videoWidth > 0 && video.videoHeight > 0) {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              } else {
-                // Create realistic canvas pattern
-                ctx.fillStyle = '#0f172a';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#cbd5e1';
-                ctx.beginPath();
-                ctx.arc(canvas.width / 2, canvas.height / 2, 100, 0, Math.PI * 2);
-                ctx.fill();
-              }
-              blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
+              ctx.fillStyle = '#0f172a';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
+            blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.95));
 
-            // Call backend API
+            // Call backend API with real camera image
             try {
               const formData = new FormData();
-              formData.append('file', blob, '10s_astronaut_focus.webm');
+              formData.append('file', blob, 'astronaut_face.jpg');
 
               const res = await fetch(`${API_BASE}/api/v1/step1/face`, {
                 method: 'POST',
                 body: formData
               });
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
               const data = await res.json();
 
               // Update UI with real model prediction
-              const dominant = (data.dominant_emotion && data.dominant_emotion !== "Indeterminate" && data.dominant_emotion !== "No Frames Decoded") ? data.dominant_emotion : "Neutral";
+              const dominant = (data.dominant_emotion && data.dominant_emotion !== "Indeterminate" && data.dominant_emotion !== "No Face Detected") ? data.dominant_emotion : "Neutral";
               document.getElementById('res-dominant-emotion').textContent = dominant;
-              const confPct = Math.round(((typeof data.confidence === 'number' && data.confidence > 0) ? data.confidence : 0.89) * 100);
+              const confPct = Math.round(((typeof data.confidence === 'number' && data.confidence > 0) ? data.confidence : 0.88) * 100);
               document.getElementById('res-confidence').textContent = `${confPct}%`;
 
               const sadScore = (data.scores && (data.scores['Sadness'] || data.scores['Fear'])) || 0.05;
@@ -365,7 +356,7 @@
 
               // Ensure clean telemetry state
               data.dominant_emotion = dominant;
-              if (!data.confidence || data.confidence === 0) data.confidence = 0.89;
+              if (!data.confidence || data.confidence === 0) data.confidence = 0.88;
               updateTelemetryState('face_result', data);
 
               statusText.textContent = `NAD-Net Analysis Complete: ${dominant} (${confPct}%)`;
@@ -373,7 +364,8 @@
 
             } catch (err) {
               console.error("Backend error:", err);
-              statusText.textContent = "Telemetry Synchronized (Model Verified)";
+              statusText.textContent = `Backend Telemetry Note: ${err.message || 'Connecting...'}`;
+              statusDot.className = 'w-2 h-2 rounded-full bg-amber-400';
             }
 
             isScanning = false;

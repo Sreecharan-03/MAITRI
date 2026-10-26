@@ -154,18 +154,6 @@ class FaceEmotionEngine:
             except Exception:
                 continue
 
-        # If not found on container disk, attempt automated on-demand download via gdown
-        if not found_path:
-            try:
-                import gdown
-                target = settings.BASE_DIR / "models" / "Face" / "swinv2_export" / "swinv2_nadnet_best.pth"
-                os.makedirs(os.path.dirname(str(target)), exist_ok=True)
-                print(f"[FaceEmotionEngine] Attempting on-demand NAD-Net download to {target}...")
-                gdown.download(id="1Y_OtECi2WRBwbiCsg0sAd3-1E1xSNmkc", output=str(target), quiet=True)
-                if target.exists() and target.stat().st_size > 1024:
-                    found_path = str(target)
-            except Exception as dl_e:
-                print(f"[FaceEmotionEngine] On-demand download notice: {dl_e}")
 
         if found_path:
             try:
