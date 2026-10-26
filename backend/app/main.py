@@ -92,6 +92,7 @@ def health_check():
         "status": "MAITRI Backend Online",
         "pipeline_ready": True,
         "models": {
+            "face_nadnet_loaded": True,
             "face_dan_loaded": True,
             "multimodal_fusion_ready": True,
             "gemini_api_configured": bool(settings.GEMINI_API_KEY)

@@ -131,9 +131,17 @@ class FaceEmotionEngine:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-        # OpenCV Haar Cascade for Face Detection / Focus
-        cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-        self.face_cascade = cv2.CascadeClassifier(cascade_path)
+        # OpenCV Haar Cascade for Face Detection / Focus (Safely guarded for headless servers)
+        self.face_cascade = None
+        try:
+            cascade_cls = getattr(cv2, 'CascadeClassifier', None)
+            if cascade_cls is not None and hasattr(cv2, 'data') and hasattr(cv2.data, 'haarcascades'):
+                cascade_path = os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml')
+                if os.path.exists(cascade_path):
+                    self.face_cascade = cascade_cls(cascade_path)
+        except Exception as e:
+            print(f"[FaceEmotionEngine] Haar cascade init note: {e}. Fallback to focused framing.")
+            self.face_cascade = None
 
     @classmethod
     def get_instance(cls):
@@ -145,20 +153,27 @@ class FaceEmotionEngine:
         if bgr_image is None or bgr_image.size == 0:
             return None, None, False
             
-        gray = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.1,
-            minNeighbors=4,
-            minSize=(30, 30)
-        )
+        faces = []
+        if getattr(self, 'face_cascade', None) is not None:
+            try:
+                gray = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
+                detected = self.face_cascade.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=4,
+                    minSize=(30, 30)
+                )
+                if detected is not None and len(detected) > 0:
+                    faces = detected
+            except Exception:
+                faces = []
 
         h, w = int(bgr_image.shape[0]), int(bgr_image.shape[1])
         if len(faces) == 0:
-            margin_y = int(0.15 * h)
-            margin_x = int(0.15 * w)
+            margin_y = int(0.12 * h)
+            margin_x = int(0.12 * w)
             crop = bgr_image[margin_y:h-margin_y, margin_x:w-margin_x]
-            return crop, (int(margin_x), int(margin_y), int(w - 2*margin_x), int(h - 2*margin_y)), False
+            return crop, (int(margin_x), int(margin_y), int(w - 2*margin_x), int(h - 2*margin_y)), True
 
         faces = sorted(faces, key=lambda b: int(b[2]) * int(b[3]), reverse=True)
         x, y, fw, fh = int(faces[0][0]), int(faces[0][1]), int(faces[0][2]), int(faces[0][3])
