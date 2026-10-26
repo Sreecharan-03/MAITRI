@@ -251,26 +251,37 @@ class FaceEmotionEngine:
         try:
             gray = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2GRAY)
             gh, gw = gray.shape
-            upper_half = gray[0:int(gh * 0.5), :]
-            lower_half = gray[int(gh * 0.5):, :]
-            up_var = float(np.var(upper_half))
-            low_var = float(np.var(lower_half))
 
-            if low_var > up_var * 1.5:
+            # Precise anatomical ROIs on cropped face
+            eye_roi = gray[int(gh * 0.18):int(gh * 0.48), int(gw * 0.15):int(gw * 0.85)]
+            mouth_roi = gray[int(gh * 0.58):int(gh * 0.95), int(gw * 0.20):int(gw * 0.80)]
+
+            eye_var = float(np.var(eye_roi)) if eye_roi.size > 0 else 500.0
+            mouth_var = float(np.var(mouth_roi)) if mouth_roi.size > 0 else 500.0
+            ratio = mouth_var / (eye_var + 1e-5)
+
+            # Expression classification
+            if ratio > 1.25 and mouth_var > 1000:
                 pred_label = "Happiness"
-                conf = 0.85
-            elif up_var > low_var * 1.7:
+                conf = min(0.95, round(0.82 + (ratio - 1.25) * 0.08, 4))
+            elif eye_var > 2000 and ratio < 0.9:
                 pred_label = "Surprise"
+                conf = 0.86
+            elif eye_var > 1400 and mouth_var < 700:
+                pred_label = "Sadness"
+                conf = 0.84
+            elif eye_var > 1700 and mouth_var > 1300 and ratio < 1.1:
+                pred_label = "Anger"
                 conf = 0.82
             else:
                 pred_label = "Neutral"
-                conf = 0.89
+                conf = 0.88
 
-            scores = {emo: 0.025 for emo in self.labels}
+            scores = {emo: 0.02 for emo in self.labels}
             scores[pred_label] = round(conf, 4)
             total = sum(scores.values())
             scores = {emo: round(val / total, 4) for emo, val in scores.items()}
-            fsi = round(min(0.85, max(0.09, abs(up_var - low_var) / (up_var + low_var + 1e-5))), 4)
+            fsi = round(min(0.85, max(0.09, abs(eye_var - mouth_var) / (eye_var + mouth_var + 1e-5))), 4)
             return pred_label, conf, scores, fsi
         except Exception:
             return "Neutral", 0.88, {emo: (0.82 if emo == "Neutral" else 0.03) for emo in self.labels}, 0.14

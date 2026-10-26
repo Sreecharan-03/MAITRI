@@ -18,14 +18,22 @@ from app.config import settings
 
 logger = logging.getLogger("uvicorn.info")
 
+def background_model_downloader():
+    try:
+        from download_models import run_download
+        run_download()
+        from app.services.face_model import get_face_engine
+        get_face_engine()._try_load_model()
+        print("INFO:     Background model check complete.")
+    except Exception as e:
+        print(f"WARN:     Background downloader note: {e}")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Preload / check artifacts
-    print("INFO:     All MAITRI model artifacts loaded into memory.")
-    logger.info("All MAITRI model artifacts loaded into memory.")
+    import threading
+    t = threading.Thread(target=background_model_downloader, daemon=True)
+    t.start()
     yield
-    # Shutdown
-    pass
 
 app = FastAPI(
     title="MAITRI Astronaut Wellbeing API",
@@ -88,12 +96,15 @@ def root(request: Request):
 
 @app.get("/health")
 def health_check():
+    from app.services.face_model import get_face_engine
+    engine = get_face_engine()
+    ckpt = str(settings.FACE_MODEL_CHECKPOINT)
     return {
         "status": "MAITRI Backend Online",
         "pipeline_ready": True,
         "models": {
-            "face_nadnet_loaded": True,
-            "face_dan_loaded": True,
+            "face_nadnet_loaded": engine.is_loaded,
+            "face_checkpoint_exists": os.path.exists(ckpt),
             "multimodal_fusion_ready": True,
             "gemini_api_configured": bool(settings.GEMINI_API_KEY)
         }

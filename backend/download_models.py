@@ -20,14 +20,19 @@ DOWNLOAD_MAP = {
 }
 
 def run_download():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     for relative_path, file_id in DOWNLOAD_MAP.items():
-        if os.path.exists(relative_path) and os.path.getsize(relative_path) > 1024:
-            size_mb = os.path.getsize(relative_path) / (1024 * 1024)
-            print(f"[FOUND] {relative_path} ({size_mb:.2f} MB)")
+        full_path = os.path.join(base_dir, relative_path)
+        if os.path.exists(full_path) and os.path.getsize(full_path) > 1024:
+            size_mb = os.path.getsize(full_path) / (1024 * 1024)
+            print(f"[FOUND] {full_path} ({size_mb:.2f} MB)")
         else:
-            print(f"[DOWNLOADING] {relative_path} ...")
-            os.makedirs(os.path.dirname(relative_path), exist_ok=True)
-            gdown.download(id=file_id, output=relative_path, quiet=False)
+            print(f"[DOWNLOADING] {full_path} ...")
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            try:
+                gdown.download(id=file_id, output=full_path, quiet=False)
+            except Exception as e:
+                print(f"[DOWNLOAD NOTICE]: Could not download {relative_path}: {e}")
 
 if __name__ == "__main__":
     run_download()
