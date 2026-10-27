@@ -24,6 +24,8 @@ def background_model_downloader():
         run_download()
         from app.services.face_model import get_face_engine
         get_face_engine()._try_load_model()
+        import gc
+        gc.collect()
         print("INFO:     Background model check complete.")
     except Exception as e:
         print(f"WARN:     Background downloader note: {e}")

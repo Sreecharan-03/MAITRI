@@ -1,21 +1,15 @@
 import os
 import gdown
 
-# Map your Drive IDs to the exact folders visible in your workspace
+# Optimized for Cloud Deployment: Only download models actually consumed by services
 DOWNLOAD_MAP = {
-    # 1. Face Channel (NAD-Net)
+    # 1. Face Channel (SwinV2 NAD-Net ~136MB)
     "models/Face/swinv2_export/swinv2_nadnet_best.pth": "1Y_OtECi2WRBwbiCsg0sAd3-1E1xSNmkc",
 
-    # 2. Speech Channel (PAN)
-    "models/Speech/MAITRI_Speech_Channel_Bundle/maitri_pan_best_model.pt": "1xOA1_JBx0GM8wKauj0vvYvhIqCiqynni",
-
-    # 3. Text Channel (PAC-Net)
-    "models/Text/pacnet_extracted/pacnet_modernbert_best.pth": "1gZMoxMQDiXs_FGIaXFFeHu4Twgkk9hsD",
-
-    # 4. Physiological LOSO Model
+    # 2. Physiological LOSO Model (~2MB)
     "models/Physiological/MAITRI_Physiological_Channel_Bundle/maitri_calibrated_stress_estimator_loso.pkl": "1sO3cW7cQUcJ3ZQBJjZS5ErpN80j9vzSO",
 
-    # 5. Physiological Random Forest Model
+    # 3. Physiological Random Forest Model (~2MB)
     "models/Physiological/MAITRI_Physiological_Channel_Bundle/maitri_rf_stress_estimator.pkl": "1fuqE5dcxiaGBSVeSyMnDPuzf-Cb9CjYC"
 }
 
