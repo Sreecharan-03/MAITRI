@@ -112,8 +112,8 @@ class FaceEmotionEngine:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-        # Load SwinV2 NAD-Net
-        self._try_load_model()
+        # Lazy loading mode: Do not load model at initialization to save RAM on Render 512MB tier
+        # self._try_load_model()
 
         # OpenCV Haar Cascade for Face Detection / Focus (Safely guarded for headless servers)
         self.face_cascade = None
@@ -217,12 +217,35 @@ class FaceEmotionEngine:
             return "Neutral", 0.88, {emo: (0.82 if emo == "Neutral" else 0.03) for emo in self.labels}, 0.12
 
         # Try to load model if not yet loaded
-        if not self.is_loaded or self.model is None:
-            self._try_load_model()
-
-        # If SwinV2 model is loaded, run full deep transformer inference
-        if self.is_loaded and self.model is not None:
+        # Check if SwinV2 NAD-Net weights exist on container disk
+        from pathlib import Path
+        candidate_paths = [
+            Path(str(settings.FACE_MODEL_CHECKPOINT)),
+            settings.BASE_DIR / "models" / "Face" / "swinv2_export" / "swinv2_nadnet_best.pth",
+            Path("models/Face/swinv2_export/swinv2_nadnet_best.pth"),
+            Path("/opt/render/project/src/backend/models/Face/swinv2_export/swinv2_nadnet_best.pth")
+        ]
+        found_ckpt = None
+        for p in candidate_paths:
             try:
+                if p and p.exists() and p.stat().st_size > 1024:
+                    found_ckpt = str(p)
+                    break
+            except Exception:
+                continue
+
+        # If SwinV2 model checkpoint exists: Lazy-Load, Predict, and Immediately Flush from RAM
+        if found_ckpt:
+            model = None
+            try:
+                import gc
+                model = SwinV2NADNet(num_classes=self.num_classes, pretrained=False)
+                checkpoint = torch.load(found_ckpt, map_location=self.device)
+                state_dict = checkpoint.get('model_state_dict', checkpoint)
+                model.load_state_dict(state_dict, strict=True)
+                model.to(self.device)
+                model.eval()
+
                 rgb_image = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
                 pil_image = Image.fromarray(rgb_image)
                 w, h = pil_image.size
@@ -235,7 +258,7 @@ class FaceEmotionEngine:
                 t_low = self.transform(lower_img).unsqueeze(0).to(self.device)
 
                 with torch.no_grad():
-                    logits_global, logits_up, logits_low = self.model(t_up, t_low)
+                    logits_global, logits_up, logits_low = model(t_up, t_low)
                     probs = torch.softmax(logits_global, dim=1)[0]
                     fsi = SwinV2NADNet.compute_fsi(logits_up, logits_low).item()
                     pred_idx = int(torch.argmax(probs).item())
@@ -243,9 +266,19 @@ class FaceEmotionEngine:
                     pred_score = float(probs[pred_idx].item())
                     all_scores = {str(self.labels[i]): round(float(probs[i].item()), 4) for i in range(len(self.labels))}
 
+                # Immediately flush from RAM to stay strictly under Render 512MB limit
+                del model, checkpoint, state_dict, t_up, t_low, logits_global, logits_up, logits_low, probs
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
                 return pred_label, pred_score, all_scores, round(float(fsi), 4)
             except Exception as inf_e:
-                print(f"[FaceEmotionEngine] Transformer inference fallback: {inf_e}")
+                print(f"[FaceEmotionEngine] On-demand SwinV2 note: {inf_e}. Using anatomical fallback.")
+                if model is not None:
+                    del model
+                import gc
+                gc.collect()
 
         # High-fidelity affective estimation fallback based on facial crop luminance & symmetry
         try:

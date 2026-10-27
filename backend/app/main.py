@@ -22,11 +22,9 @@ def background_model_downloader():
     try:
         from download_models import run_download
         run_download()
-        from app.services.face_model import get_face_engine
-        get_face_engine()._try_load_model()
         import gc
         gc.collect()
-        print("INFO:     Background model check complete.")
+        print("INFO:     Background model check complete. Models will lazy-load on demand.")
     except Exception as e:
         print(f"WARN:     Background downloader note: {e}")
 
