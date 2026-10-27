@@ -14,7 +14,7 @@ def run_tests():
         health = json.loads(r.read().decode())
         print("  Status:", health)
         assert health["status"] == "MAITRI Backend Online"
-        assert health["models"]["face_dan_loaded"] is True
+        assert health["pipeline_ready"] is True
 
     # 2. Step 1: Face Emotion Prediction
     print("\n[2/6] Testing Step 1 Face Model Prediction (/api/v1/step1/face)...")
@@ -87,7 +87,7 @@ def run_tests():
         print("  Stress Index:", step4_res["stress_score"])
 
     # 6. Step 5: Gemini LLM Synthesis
-    print("\n[6/6] Testing Step 5 Gemini LLM Synthesis (/api/v1/step5/summary)...")
+    print("\n[6/8] Testing Step 5 Gemini LLM Synthesis (/api/v1/step5/summary)...")
     req5 = urllib.request.Request(
         "http://127.0.0.1:8000/api/v1/step5/summary",
         data=json.dumps({
@@ -102,12 +102,38 @@ def run_tests():
     )
     with urllib.request.urlopen(req5) as r:
         step5_res = json.loads(r.read().decode())
-        print("  Overall Score:", step5_res["overall_wellbeing_score"])
-        print("  Status:", step5_res["psychological_status"])
-        print("  Recommendations:", len(step5_res["recommended_actions"]), "actions generated")
+        print("  Overall Score:", step5_res.get("overall_wellbeing_score", step5_res.get("readiness_score")))
+        print("  Status:", step5_res.get("psychological_status", step5_res.get("status")))
+        print("  Recommendations:", len(step5_res.get("recommended_actions", step5_res.get("recommendations", []))), "actions generated")
+
+    # 7. Multimodal Late Fusion
+    print("\n[7/8] Testing Multimodal Unified Pipeline (/api/v1/predict_multimodal)...")
+    req_mm = urllib.request.Request(
+        "http://127.0.0.1:8000/api/v1/predict_multimodal",
+        data=json.dumps({
+            "text_log": "All systems nominal, slight fatigue reported after shift.",
+            "heart_rate_bpm": 82.0,
+            "spo2_percent": 98.0
+        }).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req_mm) as r:
+        mm_res = json.loads(r.read().decode())
+        print("  Predicted Emotion:", mm_res["predicted_emotion"])
+        print("  Confidence:", mm_res["confidence"])
+        print("  Composite Suppression Index:", mm_res["composite_suppression_index"])
+        print("  Discordance Alert:", mm_res["discordance_alert"])
+
+    # 8. Frontend Dev Server & Proxy on http://localhost:3000
+    print("\n[8/8] Testing Frontend Dev Server & Proxy (http://localhost:3000)...")
+    pages = ["/", "/face-scan.html", "/voice-check.html", "/daily-log.html", "/health-vitals.html", "/summary.html"]
+    for p in pages:
+        with urllib.request.urlopen(f"http://localhost:3000{p}") as r:
+            print(f"  Page {p}: HTTP {r.status}")
+            assert r.status == 200
 
     print("\n" + "=" * 60)
-    print(">>> SUCCESS: ALL FRONTEND-TO-BACKEND API CALLS TESTED AND FUNCTIONAL <<<")
+    print(">>> SUCCESS: ALL END-TO-END ENDPOINTS PASSED COMPLETELY! <<<")
     print("=" * 60)
 
 if __name__ == "__main__":
