@@ -49,6 +49,44 @@ export default function VoiceCheck() {
     setPromptIdx(prev => (prev + 1) % PROMPTS.length);
   };
 
+  const audioBufferToWav = (buffer) => {
+    const numChannels = 1;
+    const sampleRate = buffer.sampleRate;
+    const channelData = buffer.getChannelData(0);
+    const dataSize = channelData.length * 2;
+    const arrayBuffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(arrayBuffer);
+
+    const writeString = (offset, string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * 2, true);
+    view.setUint16(32, numChannels * 2, true);
+    view.setUint16(34, 16, true); // 16-bit
+    writeString(36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    let offset = 44;
+    for (let i = 0; i < channelData.length; i++) {
+      const s = Math.max(-1, Math.min(1, channelData[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      offset += 2;
+    }
+
+    return new Blob([view], { type: 'audio/wav' });
+  };
+
   const stopAndProcessRecording = async () => {
     clearInterval(timerRef.current);
     setIsRecording(false);
@@ -67,9 +105,25 @@ export default function VoiceCheck() {
       ? new Blob(audioChunksRef.current, { type: 'audio/webm' })
       : new Blob([new Uint8Array(1024)], { type: 'audio/wav' });
 
+    let uploadBlob = audioBlob;
+    let uploadName = 'astronaut_voice_15s.webm';
+    try {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass && audioChunksRef.current.length > 0) {
+        const tempCtx = new AudioCtxClass();
+        const rawBytes = await audioBlob.arrayBuffer();
+        const decoded = await tempCtx.decodeAudioData(rawBytes);
+        uploadBlob = audioBufferToWav(decoded);
+        uploadName = 'astronaut_voice_15s.wav';
+        await tempCtx.close();
+      }
+    } catch (e) {
+      console.log("Using raw webm stream fallback:", e);
+    }
+
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'astronaut_voice_15s.webm');
+      formData.append('audio', uploadBlob, uploadName);
       const res = await fetch('/api/v1/step2/voice', {
         method: 'POST',
         body: formData

@@ -194,19 +194,45 @@
       <!-- Voice Metric Cards -->
       <div class="grid grid-cols-3 gap-2 sm:gap-3 my-5 sm:my-6">
         <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-2.5 sm:p-3 text-center">
-          <div class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider font-medium truncate">Acoustic
-            Tone</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider font-medium truncate">Acoustic Tone</div>
           <div class="text-xs sm:text-sm font-semibold text-cyan-300 mt-1" id="voice-dominant-label">Calm / Steady</div>
         </div>
         <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-2.5 sm:p-3 text-center">
-          <div class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider font-medium truncate">Pitch
-            (F0)</div>
-          <div class="text-xs sm:text-sm font-semibold text-white mt-1" id="voice-pitch-label">118.2 Hz</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider font-medium truncate">Pitch (F0)</div>
+          <div class="text-xs sm:text-sm font-semibold text-white mt-1" id="voice-pitch-label">120.0 Hz</div>
         </div>
         <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-2.5 sm:p-3 text-center">
-          <div class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider font-medium truncate">
-            Confidence</div>
+          <div class="text-[10px] sm:text-[11px] text-slate-400 uppercase tracking-wider font-medium truncate">Confidence</div>
           <div class="text-xs sm:text-sm font-semibold text-emerald-400 mt-1" id="voice-conf-label">84%</div>
+        </div>
+      </div>
+
+      <!-- Judge Demonstration Telemetry Presets -->
+      <div class="mb-5 p-3.5 bg-slate-950/60 border border-slate-800/90 rounded-2xl">
+        <div class="flex items-center justify-between mb-2.5 px-0.5">
+          <span class="text-[11px] font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[15px] text-cyan-400">tune</span>
+            Telemetry Simulation Profiles (For Judge Evaluation)
+          </span>
+          <span class="text-[10px] text-slate-500 font-mono">PAN v1.0</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button type="button" class="preset-voice-btn px-2.5 py-2 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-emerald-500/10 hover:border-emerald-500/50 text-[11px] text-slate-200 transition text-left cursor-pointer group" data-freq="122" data-amp="0.18">
+            <span class="block font-semibold text-emerald-400 group-hover:text-emerald-300">🌿 Calm / Steady</span>
+            <span class="text-[10px] text-slate-400">122 Hz • Nominal Prosody</span>
+          </button>
+          <button type="button" class="preset-voice-btn px-2.5 py-2 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-cyan-500/10 hover:border-cyan-500/50 text-[11px] text-slate-200 transition text-left cursor-pointer group" data-freq="152" data-amp="0.16">
+            <span class="block font-semibold text-cyan-300 group-hover:text-cyan-200">💬 Conversational</span>
+            <span class="text-[10px] text-slate-400">152 Hz • Neutral Dynamic</span>
+          </button>
+          <button type="button" class="preset-voice-btn px-2.5 py-2 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-amber-500/10 hover:border-amber-500/50 text-[11px] text-slate-200 transition text-left cursor-pointer group" data-freq="215" data-amp="0.22">
+            <span class="block font-semibold text-amber-400 group-hover:text-amber-300">⚡ Strained / Alarm</span>
+            <span class="text-[10px] text-slate-400">215 Hz • Elevated Pitch</span>
+          </button>
+          <button type="button" class="preset-voice-btn px-2.5 py-2 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-rose-500/10 hover:border-rose-500/50 text-[11px] text-slate-200 transition text-left cursor-pointer group" data-freq="170" data-amp="0.75">
+            <span class="block font-semibold text-rose-400 group-hover:text-rose-300">🚨 Friction / Frustrated</span>
+            <span class="text-[10px] text-slate-400">170 Hz • Loud Acoustic Strain</span>
+          </button>
         </div>
       </div>
 
@@ -272,49 +298,118 @@
         let size = timeData.length;
         let rms = 0;
         for (let i = 0; i < size; i++) {
-          let val = timeData[i];
-          rms += val * val;
+          rms += timeData[i] * timeData[i];
         }
         rms = Math.sqrt(rms / size);
-        if (rms < 0.01) return null; // Silence
+        if (rms < 0.012) return null; // Ignore silence
 
-        // Autocorrelation
-        let r1 = 0, r2 = size - 1, thres = 0.2;
-        for (let i = 0; i < size / 2; i++) {
-          if (Math.abs(timeData[i]) < thres) { r1 = i; break; }
-        }
-        for (let i = 1; i < size / 2; i++) {
-          if (Math.abs(timeData[size - i]) < thres) { r2 = size - i; break; }
-        }
+        const minLag = Math.max(1, Math.floor(sampleRate / 380));
+        const maxLag = Math.min(size - 1, Math.floor(sampleRate / 75));
+        if (minLag >= maxLag) return null;
 
-        let buf = timeData.slice(r1, r2);
-        let c = new Array(buf.length).fill(0);
-        for (let i = 0; i < buf.length; i++) {
-          for (let j = 0; j < buf.length - i; j++) {
-            c[i] = c[i] + buf[j] * buf[j + i];
+        let bestLag = -1;
+        let maxCorr = -1;
+        for (let lag = minLag; lag <= maxLag; lag++) {
+          let sum = 0;
+          for (let i = 0; i < size - lag; i++) {
+            sum += timeData[i] * timeData[i + lag];
+          }
+          if (sum > maxCorr) {
+            maxCorr = sum;
+            bestLag = lag;
           }
         }
 
-        let d = 0;
-        while (c[d] > c[d + 1]) d++;
-        let maxval = -1, maxpos = -1;
-        for (let i = d; i < buf.length; i++) {
-          if (c[i] > maxval) {
-            maxval = c[i];
-            maxpos = i;
-          }
-        }
-        let T0 = maxpos;
-        if (T0 > 0) {
-          let freq = sampleRate / T0;
-          if (freq >= 75 && freq <= 350) return freq;
+        if (bestLag > 0 && maxCorr > 0) {
+          const freq = sampleRate / bestLag;
+          if (freq >= 75 && freq <= 380) return Math.round(freq * 10) / 10;
         }
         return null;
       }
 
+      function audioBufferToWav(buffer) {
+        const numChannels = 1;
+        const sampleRate = buffer.sampleRate;
+        const channelData = buffer.getChannelData(0);
+        const dataSize = channelData.length * 2;
+        const arrayBuffer = new ArrayBuffer(44 + dataSize);
+        const view = new DataView(arrayBuffer);
+
+        function writeString(offset, string) {
+          for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+          }
+        }
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + dataSize, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * numChannels * 2, true);
+        view.setUint16(32, numChannels * 2, true);
+        view.setUint16(34, 16, true); // 16-bit
+        writeString(36, 'data');
+        view.setUint32(40, dataSize, true);
+
+        let offset = 44;
+        for (let i = 0; i < channelData.length; i++) {
+          const s = Math.max(-1, Math.min(1, channelData[i]));
+          view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+          offset += 2;
+        }
+
+        return new Blob([view], { type: 'audio/wav' });
+      }
+
+      function generateSyntheticWavBlob(freq, amp, durationSec = 3.0, sampleRate = 16000) {
+        const totalSamples = Math.floor(sampleRate * durationSec);
+        const dataSize = totalSamples * 2;
+        const arrayBuffer = new ArrayBuffer(44 + dataSize);
+        const view = new DataView(arrayBuffer);
+
+        function writeString(offset, string) {
+          for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+          }
+        }
+
+        writeString(0, 'RIFF');
+        view.setUint32(4, 36 + dataSize, true);
+        writeString(8, 'WAVE');
+        writeString(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(36, 'data');
+        view.setUint32(40, dataSize, true);
+
+        let offset = 44;
+        for (let i = 0; i < totalSamples; i++) {
+          const t = i / sampleRate;
+          // Add fundamental + slight 2nd harmonic for vocal realism
+          const val = amp * (0.85 * Math.sin(2 * Math.PI * freq * t) + 0.15 * Math.sin(4 * Math.PI * freq * t));
+          const s = Math.max(-1, Math.min(1, val));
+          view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+          offset += 2;
+        }
+
+        return new Blob([view], { type: 'audio/wav' });
+      }
+
+      let pitchSamplerTimer = null;
+
       async function stopAndProcessRecording() {
         if (!isRecording) return;
         clearInterval(countTimer);
+        clearInterval(pitchSamplerTimer);
 
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
           try { mediaRecorder.stop(); } catch(e) {}
@@ -323,14 +418,11 @@
           audioStream.getTracks().forEach(t => t.stop());
         }
 
-        // Calculate average detected pitch
+        // Calculate average detected pitch from spoken frames
         let measuredPitch = null;
         if (pitchReadings.length > 0) {
-          const sum = pitchReadings.reduce((a, b) => a + b, 0);
-          measuredPitch = Math.round((sum / pitchReadings.length) * 10) / 10;
-        }
-        if (audioCtx) {
-          try { await audioCtx.close(); } catch(e) {}
+          const sorted = [...pitchReadings].sort((a, b) => a - b);
+          measuredPitch = sorted[Math.floor(sorted.length / 2)];
         }
 
         statusText.textContent = "Processing 15s Wav2Vec2 Acoustic Prosody...";
@@ -342,9 +434,25 @@
           ? new Blob(audioChunks, { type: 'audio/webm' })
           : new Blob([new Uint8Array(1024)], { type: 'audio/wav' });
 
+        let uploadBlob = audioBlob;
+        let uploadName = 'astronaut_voice_15s.webm';
+        if (audioCtx && audioChunks.length > 0) {
+          try {
+            const rawBytes = await audioBlob.arrayBuffer();
+            const decoded = await audioCtx.decodeAudioData(rawBytes);
+            uploadBlob = audioBufferToWav(decoded);
+            uploadName = 'astronaut_voice_15s.wav';
+          } catch(e) {
+            console.log("Using raw webm stream:", e);
+          }
+        }
+        if (audioCtx) {
+          try { await audioCtx.close(); } catch(e) {}
+        }
+
         try {
           const formData = new FormData();
-          formData.append('audio', audioBlob, 'astronaut_voice_15s.webm');
+          formData.append('audio', uploadBlob, uploadName);
           if (measuredPitch) {
             formData.append('measured_pitch', measuredPitch.toString());
           }
@@ -354,12 +462,8 @@
           });
           const data = await res.json();
 
-          document.getElementById('voice-dominant-label').textContent = (data.dominant_emotion || "Calm").toUpperCase();
-          document.getElementById('voice-pitch-label').textContent = `${data.pitch_hz || (measuredPitch || 118.2)} Hz`;
-          document.getElementById('voice-conf-label').textContent = `${Math.round((data.confidence || 0.84) * 100)}%`;
-
-          updateTelemetryState('voice_result', data);
-          statusText.textContent = `✓ 15s Voice Analysis Synchronized (${(data.dominant_emotion || "Calm").toUpperCase()} • ${data.pitch_hz || 118.2} Hz)`;
+          applyVoiceResult(data);
+          statusText.textContent = `✓ 15s Voice Analysis Synchronized (${(data.dominant_emotion || "Calm").toUpperCase()} • ${data.pitch_hz || 120.0} Hz)`;
           statusText.className = "text-emerald-400 font-medium text-xs sm:text-sm mt-3";
 
         } catch (err) {
@@ -372,9 +476,62 @@
         isRecording = false;
       }
 
+      function applyVoiceResult(data) {
+        const emo = (data.dominant_emotion || "Calm").toUpperCase();
+        const pitchVal = `${(data.pitch_hz || 120.0).toFixed(1)} Hz`;
+        const confVal = `${Math.round((data.confidence || 0.84) * 100)}%`;
+
+        const emoLabel = document.getElementById('voice-dominant-label');
+        emoLabel.textContent = emo;
+
+        // Dynamic badge color based on detected emotion
+        if (['FEAR', 'ANGER'].includes(emo)) {
+          emoLabel.className = "text-xs sm:text-sm font-semibold text-rose-400 mt-1";
+        } else if (emo === 'SADNESS') {
+          emoLabel.className = "text-xs sm:text-sm font-semibold text-amber-300 mt-1";
+        } else {
+          emoLabel.className = "text-xs sm:text-sm font-semibold text-cyan-300 mt-1";
+        }
+
+        document.getElementById('voice-pitch-label').textContent = pitchVal;
+        document.getElementById('voice-conf-label').textContent = confVal;
+        updateTelemetryState('voice_result', data);
+      }
+
+      // Quick Simulation Presets For Demonstration
+      document.querySelectorAll('.preset-voice-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const freq = parseFloat(btn.dataset.freq || 122);
+          const amp = parseFloat(btn.dataset.amp || 0.18);
+          const wavBlob = generateSyntheticWavBlob(freq, amp);
+
+          statusText.textContent = `Injecting Telemetry (${freq} Hz • PAN Prosody Analysis)...`;
+          statusText.className = "text-cyan-400 font-medium text-xs sm:text-sm mt-3 animate-pulse";
+
+          try {
+            const formData = new FormData();
+            formData.append('audio', wavBlob, 'preset_audio.wav');
+            formData.append('measured_pitch', freq.toString());
+
+            const res = await fetch(`${API_BASE}/api/v1/step2/voice`, {
+              method: 'POST',
+              body: formData
+            });
+            const data = await res.json();
+            applyVoiceResult(data);
+
+            statusText.textContent = `✓ Simulation Synchronized: ${(data.dominant_emotion || "Calm").toUpperCase()} (${data.pitch_hz} Hz • ${Math.round(data.confidence * 100)}% confidence)`;
+            statusText.className = "text-emerald-400 font-medium text-xs sm:text-sm mt-3";
+          } catch (e) {
+            console.error("Simulation error:", e);
+            statusText.textContent = "Simulation failed to connect to backend.";
+            statusText.className = "text-rose-400 font-medium text-xs sm:text-sm mt-3";
+          }
+        });
+      });
+
       micBtn?.addEventListener('click', async () => {
         if (isRecording) {
-          // Strictly enforce at least 15 seconds recording
           if (countdown > 0) {
             statusText.textContent = `⚠️ Minimum 15s required (${countdown}s left) — please keep speaking`;
             statusText.className = "text-amber-400 font-medium text-xs sm:text-sm mt-3 animate-pulse";
@@ -409,6 +566,20 @@
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 2048;
             source.connect(analyser);
+
+            // High frequency live pitch sampler (every 120ms)
+            pitchSamplerTimer = setInterval(() => {
+              if (!analyser || !audioCtx) return;
+              const timeBuf = new Float32Array(analyser.fftSize);
+              analyser.getFloatTimeDomainData(timeBuf);
+              const p = detectPitch(timeBuf, audioCtx.sampleRate);
+              if (p && p >= 75 && p <= 360) {
+                pitchReadings.push(p);
+                // Update pitch card live while speaking!
+                const livePitchEl = document.getElementById('voice-pitch-label');
+                if (livePitchEl) livePitchEl.textContent = `${p.toFixed(1)} Hz (Live)`;
+              }
+            }, 120);
           }
         } catch (err) {
           console.warn("Audio mic access error:", err);
@@ -427,14 +598,6 @@
           countdown--;
           const pct = Math.round(((TOTAL_SECONDS - countdown) / TOTAL_SECONDS) * 100);
           if (recProgressBar) recProgressBar.style.width = `${pct}%`;
-
-          // Track live pitch from microphone
-          if (analyser && audioCtx) {
-            const timeBuf = new Float32Array(analyser.fftSize);
-            analyser.getFloatTimeDomainData(timeBuf);
-            const p = detectPitch(timeBuf, audioCtx.sampleRate);
-            if (p) pitchReadings.push(p);
-          }
 
           if (countdown > 0) {
             statusText.textContent = `Recording audio... (${countdown}s remaining • 15s minimum)`;
